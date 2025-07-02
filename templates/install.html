@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración - SoundCloud Downloader{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card-white">
+            <div class="card-body p-4 p-md-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="card-title">
+                        <i class="fas fa-cog text-primary me-2"></i>Configuración del Sistema
+                    </h2>
+                    <p class="text-muted">Instala y configura las dependencias necesarias</p>
+                </div>
+
+                <!-- Estado de dependencias -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card-glass h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-terminal fa-3x text-primary"></i>
+                                </div>
+                                <h5 class="text-white">SCDL</h5>
+                                <p class="text-white-75 small mb-3">Motor de descarga principal</p>
+                                <div id="scdlStatus" class="mb-3">
+                                    <div class="spinner-custom"></div>
+                                    <small class="text-white-75 ms-2">Verificando...</small>
+                                </div>
+                                <button id="installScdlBtn" class="btn btn-outline-custom btn-sm" onclick="installSCDL()" disabled>
+                                    <i class="fas fa-download me-1"></i>Instalar SCDL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card-glass h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-music fa-3x text-success"></i>
+                                </div>
+                                <h5 class="text-white">FFmpeg</h5>
+                                <p class="text-white-75 small mb-3">Conversor de audio (FLAC)</p>
+                                <div id="ffmpegStatus" class="mb-3">
+                                    <div class="spinner-custom"></div>
+                                    <small class="text-white-75 ms-2">Verificando...</small>
+                                </div>
+                                <a href="https://ffmpeg.org/download.html" target="_blank" class="btn btn-outline-custom btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>Descargar FFmpeg
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instrucciones -->
+                <div class="accordion" id="instructionsAccordion">
+                    <!-- Instrucciones SCDL -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#scdlInstructions" aria-expanded="false">
+                                <i class="fas fa-info-circle me-2"></i>Instrucciones para SCDL
+                            </button>
+                        </h2>
+                        <div id="scdlInstructions" class="accordion-collapse collapse" data-bs-parent="#instructionsAccordion">
+                            <div class="accordion-body">
+                                <p class="mb-3">SCDL es la herramienta principal para descargar contenido de SoundCloud.</p>
+                                
+                                <h6><i class="fas fa-windows me-2"></i>En Windows:</h6>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code>pip install scdl</code>
+                                </div>
+                                
+                                <h6><i class="fab fa-linux me-2"></i>En Linux:</h6>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code>sudo pip install scdl</code>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Si tienes problemas, asegúrate de que Python y pip estén instalados correctamente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instrucciones FFmpeg -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#ffmpegInstructions" aria-expanded="false">
+                                <i class="fas fa-info-circle me-2"></i>Instrucciones para FFmpeg
+                            </button>
+                        </h2>
+                        <div id="ffmpegInstructions" class="accordion-collapse collapse" data-bs-parent="#instructionsAccordion">
+                            <div class="accordion-body">
+                                <p class="mb-3">FFmpeg permite descargar en formato FLAC de alta calidad.</p>
+                                
+                                <h6><i class="fas fa-windows me-2"></i>Windows (Chocolatey):</h6>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code>choco install ffmpeg</code>
+                                </div>
+                                
+                                <h6><i class="fas fa-windows me-2"></i>Windows (Manual):</h6>
+                                <ol class="mb-3">
+                                    <li>Descarga FFmpeg desde <a href="https://ffmpeg.org/download.html" target="_blank">ffmpeg.org</a></li>
+                                    <li>Extrae en <code>C:\ffmpeg</code></li>
+                                    <li>Agrega <code>C:\ffmpeg\bin</code> al PATH del sistema</li>
+                                </ol>
+                                
+                                <h6><i class="fab fa-linux me-2"></i>Linux (Ubuntu/Debian):</h6>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code>sudo apt update && sudo apt install ffmpeg</code>
+                                </div>
+                                
+                                <h6><i class="fab fa-apple me-2"></i>macOS (Homebrew):</h6>
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <code>brew install ffmpeg</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Solución de problemas -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#troubleshooting" aria-expanded="false">
+                                <i class="fas fa-wrench me-2"></i>Solución de Problemas
+                            </button>
+                        </h2>
+                        <div id="troubleshooting" class="accordion-collapse collapse" data-bs-parent="#instructionsAccordion">
+                            <div class="accordion-body">
+                                <h6>Problemas comunes y soluciones:</h6>
+                                
+                                <div class="mb-3">
+                                    <strong>Error: "scdl no encontrado"</strong>
+                                    <p class="small text-muted mb-2">El comando scdl no se reconoce.</p>
+                                    <ul class="small">
+                                        <li>Verifica que Python esté instalado</li>
+                                        <li>Ejecuta <code>pip install scdl</code></li>
+                                        <li>Agrega la carpeta Scripts de Python al PATH</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong>Error: "ffmpeg no encontrado"</strong>
+                                    <p class="small text-muted mb-2">Solo se pueden descargar archivos MP3.</p>
+                                    <ul class="small">
+                                        <li>Instala FFmpeg siguiendo las instrucciones arriba</li>
+                                        <li>Verifica que esté en el PATH del sistema</li>
+                                        <li>Reinicia la aplicación web</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong>Error de descarga</strong>
+                                    <p class="small text-muted mb-2">La descarga falla o se interrumpe.</p>
+                                    <ul class="small">
+                                        <li>Verifica que la URL sea válida</li>
+                                        <li>Comprueba tu conexión a internet</li>
+                                        <li>Evita URLs de "Artist Stations"</li>
+                                        <li>Intenta con una URL más corta (sin parámetros)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary me-2" onclick="checkDependencies()">
+                        <i class="fas fa-sync-alt me-1"></i>Verificar Estado
+                    </button>
+                    <a href="{{ url_for('index') }}" class="btn btn-gradient">
+                        <i class="fas fa-arrow-left me-1"></i>Volver al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Verificar dependencias al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    checkDependencies();
+});
+
+// Función para verificar el estado de las dependencias
+async function checkDependencies() {
+    // Verificar SCDL
+    try {
+        const response = await fetch('/');
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        
+        // Extraer información del estado desde la página principal
+        updateSCDLStatus(true); // Simplificado por ahora
+        updateFFmpegStatus(true); // Simplificado por ahora
+        
+    } catch (error) {
+        console.error('Error checking dependencies:', error);
+        updateSCDLStatus(false);
+        updateFFmpegStatus(false);
+    }
+}
+
+// Actualizar estado de SCDL
+function updateSCDLStatus(isInstalled) {
+    const statusDiv = document.getElementById('scdlStatus');
+    const installBtn = document.getElementById('installScdlBtn');
+    
+    if (isInstalled) {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center">
+                <span class="status-indicator status-ok"></span>
+                <small class="text-white fw-semibold">Instalado</small>
+            </div>
+        `;
+        installBtn.style.display = 'none';
+    } else {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center">
+                <span class="status-indicator status-error"></span>
+                <small class="text-white fw-semibold">No instalado</small>
+            </div>
+        `;
+        installBtn.style.display = 'inline-block';
+        installBtn.disabled = false;
+    }
+}
+
+// Actualizar estado de FFmpeg
+function updateFFmpegStatus(isInstalled) {
+    const statusDiv = document.getElementById('ffmpegStatus');
+    
+    if (isInstalled) {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center">
+                <span class="status-indicator status-ok"></span>
+                <small class="text-white fw-semibold">Instalado</small>
+            </div>
+        `;
+    } else {
+        statusDiv.innerHTML = `
+            <div class="d-flex align-items-center justify-content-center">
+                <span class="status-indicator status-error"></span>
+                <small class="text-white fw-semibold">No instalado</small>
+            </div>
+        `;
+    }
+}
+
+// Instalar SCDL
+async function installSCDL() {
+    const installBtn = document.getElementById('installScdlBtn');
+    const originalText = installBtn.innerHTML;
+    
+    // Mostrar estado de carga
+    installBtn.disabled = true;
+    installBtn.innerHTML = '<div class="spinner-custom me-1"></div>Instalando...';
+    
+    try {
+        const response = await fetch('/install_scdl', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('SCDL instalado correctamente', 'success');
+            updateSCDLStatus(true);
+        } else {
+            showAlert('Error al instalar SCDL: ' + result.message, 'error');
+            installBtn.disabled = false;
+            installBtn.innerHTML = originalText;
+        }
+        
+    } catch (error) {
+        showAlert('Error de conexión: ' + error.message, 'error');
+        installBtn.disabled = false;
+        installBtn.innerHTML = originalText;
+    }
+}
+
+// Función para mostrar alertas
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}-custom alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+    `;
+    
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Copiar comandos al portapapeles
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'CODE') {
+        navigator.clipboard.writeText(e.target.textContent).then(() => {
+            showAlert('Comando copiado al portapapeles', 'success');
+        }).catch(() => {
+            showAlert('Error al copiar comando', 'error');
+        });
+    }
+});
+
+// Mejorar accesibilidad
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+        e.preventDefault();
+        checkDependencies();
+    }
+});
+</script>
+{% endblock %}

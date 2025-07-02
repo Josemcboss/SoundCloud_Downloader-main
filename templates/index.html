@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card-white scale-in">
+            <div class="card-body p-4 p-md-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h1 class="display-5 fw-bold text-gradient mb-3">
+                        <i class="fab fa-soundcloud text-primary"></i> SoundCloud Downloader
+                    </h1>
+                    <p class="lead text-muted">Descarga canciones y playlists de SoundCloud en alta calidad</p>
+                </div>                <!-- Estado del sistema -->
+                <div class="alert alert-info-custom mb-4">
+                    <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Estado del sistema</h6>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="status-indicator {% if scdl_installed %}status-ok{% else %}status-error{% endif %}"></span>
+                                <small class="fw-semibold">
+                                    SCDL: {% if scdl_installed %}✓ Instalado{% else %}✗ No instalado{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="status-indicator {% if ffmpeg_installed %}status-ok{% else %}status-error{% endif %}"></span>
+                                <small class="fw-semibold">
+                                    FFmpeg: {% if ffmpeg_installed %}✓ FLAC{% else %}✗ Solo MP3{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de descarga -->
+                <form id="downloadForm">
+                    <div class="mb-4">
+                        <label for="url" class="form-label">
+                            <i class="fas fa-link me-2"></i>URL de SoundCloud
+                        </label>
+                        <input type="url" class="form-control form-control-lg" id="url" 
+                               placeholder="https://soundcloud.com/usuario/cancion" required>
+                        <div class="form-text text-muted mt-2">
+                            <small><i class="fas fa-lightbulb me-1"></i>Pega aquí el enlace de la canción o playlist</small>
+                        </div>
+                    </div>                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label for="type" class="form-label">
+                                <i class="fas fa-music me-2"></i>Tipo de descarga
+                            </label>
+                            <select class="form-select" id="type" onchange="togglePlaylistOptions()">
+                                <option value="single">🎵 Canción individual</option>
+                                <option value="playlist">📋 Playlist completa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="playlistOptions" style="display: none;">
+                            <label for="zipOption" class="form-label">
+                                <i class="fas fa-archive me-2"></i>Formato de playlist
+                            </label>
+                            <select class="form-select" id="zipOption">
+                                <option value="separate">📁 Archivos separados</option>
+                                <option value="zip">📦 Comprimir en ZIP</option>
+                            </select>
+                            <div class="form-text text-muted mt-1">
+                                <small>El ZIP facilita la descarga de playlists grandes</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-gradient btn-lg" id="downloadBtn">
+                            <i class="fas fa-download me-2"></i>Iniciar Descarga
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Área de progreso -->
+                <div id="progressArea" class="mt-4" style="display: none;">
+                    <div class="card-glass">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="spinner-custom me-3"></div>
+                                <h6 class="mb-0 text-white">Estado de descarga</h6>
+                            </div>
+                            <div class="progress progress-custom mb-3">
+                                <div id="progressBar" class="progress-bar progress-bar-custom" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="statusText" class="text-white-75">Preparando descarga...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="row mt-4 text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-primary mb-2">
+                            <i class="fas fa-music fa-2x"></i>
+                        </div>
+                        <h6 class="fw-semibold">Alta Calidad</h6>
+                        <small class="text-muted">FLAC o MP3 según disponibilidad</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                        <h6 class="fw-semibold">Rápido</h6>
+                        <small class="text-muted">Descarga directa sin esperas</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-mobile-alt fa-2x"></i>
+                        </div>
+                        <h6 class="fw-semibold">Responsivo</h6>
+                        <small class="text-muted">Funciona en móvil y PC</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Variables globales
+let currentDownloadId = null;
+let progressInterval = null;
+
+// Form submission
+document.getElementById('downloadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const url = document.getElementById('url').value.trim();
+    const type = document.getElementById('type').value;
+    
+    // Validaciones básicas
+    if (!url) {
+        showAlert('Por favor, ingresa una URL', 'error');
+        return;
+    }
+    
+    if (!url.includes('soundcloud.com')) {
+        showAlert('Por favor, ingresa una URL válida de SoundCloud', 'error');
+        return;
+    }
+    
+    // Deshabilitar botón y mostrar loading
+    const downloadBtn = document.getElementById('downloadBtn');
+    const originalBtnText = downloadBtn.innerHTML;
+    downloadBtn.disabled = true;
+    downloadBtn.innerHTML = '<div class="spinner-custom me-2"></div>Iniciando...';
+    
+    // Mostrar área de progreso
+    document.getElementById('progressArea').style.display = 'block';
+    document.getElementById('progressArea').scrollIntoView({ behavior: 'smooth' });
+    
+    try {        const response = await fetch('/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                url: url,
+                type: type,
+                zipOption: document.getElementById('zipOption').value
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            currentDownloadId = result.download_id;
+            monitorProgress(result.download_id);
+        } else {
+            showAlert(result.message, 'error');
+            hideProgressArea();
+            resetDownloadButton(downloadBtn, originalBtnText);
+        }
+        
+    } catch (error) {
+        showAlert('Error de conexión: ' + error.message, 'error');
+        hideProgressArea();
+        resetDownloadButton(downloadBtn, originalBtnText);
+    }
+});
+
+// Monitorear progreso de descarga
+function monitorProgress(downloadId) {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+    
+    progressInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/status/${downloadId}`);
+            const data = await response.json();
+            
+            // Actualizar UI
+            updateProgressUI(data.progress.progress, data.progress.status);
+            
+            if (data.status === 'completed') {
+                handleDownloadComplete();
+            } else if (data.status === 'error') {
+                handleDownloadError(data.progress.status);
+            }
+            
+        } catch (error) {
+            console.error('Error checking status:', error);
+            handleDownloadError('Error al verificar el estado de descarga');
+        }
+    }, 2000);
+}
+
+// Actualizar UI de progreso
+function updateProgressUI(progress, status) {
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('statusText');
+    
+    progressBar.style.width = progress + '%';
+    statusText.textContent = status;
+}
+
+// Manejar descarga completada
+function handleDownloadComplete() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    
+    const progressBar = document.getElementById('progressBar');
+    progressBar.classList.remove('progress-bar-custom');
+    progressBar.classList.add('bg-success');
+    
+    showAlert('¡Descarga completada exitosamente!', 'success');
+    
+    setTimeout(() => {
+        hideProgressArea();
+        resetForm();
+    }, 3000);
+}
+
+// Manejar error de descarga
+function handleDownloadError(errorMessage) {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    
+    const progressBar = document.getElementById('progressBar');
+    progressBar.classList.remove('progress-bar-custom');
+    progressBar.classList.add('bg-danger');
+    
+    showAlert('Error en la descarga: ' + errorMessage, 'error');
+    
+    setTimeout(() => {
+        hideProgressArea();
+        resetForm();
+    }, 5000);
+}
+
+// Funciones auxiliares
+function hideProgressArea() {
+    document.getElementById('progressArea').style.display = 'none';
+}
+
+function resetDownloadButton(btn, originalText) {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+}
+
+function resetForm() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    resetDownloadButton(downloadBtn, '<i class="fas fa-download me-2"></i>Iniciar Descarga');
+    
+    // Reset progress bar
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+    progressBar.className = 'progress-bar progress-bar-custom';
+    
+    // Clear URL
+    document.getElementById('url').value = '';
+    document.getElementById('statusText').textContent = 'Preparando descarga...';
+}
+
+function showAlert(message, type) {
+    // Crear elemento de alerta
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}-custom alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+    `;
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+    
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove después de 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Limpiar intervalos al salir de la página
+window.addEventListener('beforeunload', () => {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+    }
+});
+
+// Mejorar UX con Enter en el input URL
+document.getElementById('url').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('downloadForm').dispatchEvent(new Event('submit'));
+    }
+});
+
+// Auto-detectar tipo de contenido basado en URL
+document.getElementById('url').addEventListener('input', function() {
+    const url = this.value;
+    const typeSelect = document.getElementById('type');
+    
+    if (url.includes('/sets/')) {
+        typeSelect.value = 'playlist';
+        togglePlaylistOptions();
+    } else if (url.includes('soundcloud.com') && !url.includes('/sets/')) {
+        typeSelect.value = 'single';
+        togglePlaylistOptions();
+    }
+});
+
+// Función para mostrar/ocultar opciones de playlist
+function togglePlaylistOptions() {
+    const typeSelect = document.getElementById('type');
+    const playlistOptions = document.getElementById('playlistOptions');
+    
+    if (typeSelect.value === 'playlist') {
+        playlistOptions.style.display = 'block';
+    } else {
+        playlistOptions.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

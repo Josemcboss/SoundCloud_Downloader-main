@@ -1,0 +1,285 @@
+    {% extends "base.html" %}
+
+{% block title %}Descargas - SoundCloud Downloader{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-lg-10 col-xl-8">
+        <div class="card-white">
+            <div class="card-body p-4 p-md-5">
+                <!-- Header -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+                    <div>
+                        <h2 class="card-title mb-2">
+                            <i class="fas fa-download text-primary me-2"></i>Archivos Descargados
+                        </h2>
+                        <p class="text-muted mb-0">
+                            {% if files %}
+                                {{ files|length }} archivo{{ 's' if files|length != 1 else '' }} disponible{{ 's' if files|length != 1 else '' }}
+                            {% else %}
+                                No hay archivos descargados
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="mt-3 mt-md-0">
+                        <a href="{{ url_for('index') }}" class="btn btn-gradient">
+                            <i class="fas fa-plus me-2"></i>Nueva Descarga
+                        </a>
+                    </div>
+                </div>
+                
+                {% if files %}
+                <!-- Tabla de archivos -->
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-music me-2"></i>Archivo</th>
+                                <th class="d-none d-md-table-cell"><i class="fas fa-weight-hanging me-2"></i>Tamaño</th>
+                                <th class="d-none d-sm-table-cell"><i class="fas fa-calendar me-2"></i>Fecha</th>
+                                <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in files %}
+                            <tr class="align-middle">
+                                <td>
+                                    <div class="d-flex align-items-center">                                        <div class="me-3">
+                                            {% if file.name.endswith('.zip') %}
+                                                <i class="fas fa-file-archive text-warning fa-lg"></i>
+                                            {% elif file.name.endswith('.flac') %}
+                                                <i class="fas fa-file-audio text-success fa-lg"></i>
+                                            {% elif file.name.endswith('.mp3') %}
+                                                <i class="fas fa-file-audio text-primary fa-lg"></i>
+                                            {% else %}
+                                                <i class="fas fa-file-audio text-info fa-lg"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-truncate" style="max-width: 250px;" title="{{ file.name }}">
+                                                {{ file.name }}
+                                            </div>
+                                            <div class="small text-muted d-md-none">
+                                                {{ file.size }} • {{ file.modified }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="d-none d-md-table-cell">
+                                    <span class="badge bg-light text-dark px-3 py-2">{{ file.size }}</span>
+                                </td>
+                                <td class="d-none d-sm-table-cell">
+                                    <small class="text-muted">{{ file.modified }}</small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('download_file', filename=file.name) }}" 
+                                           class="btn btn-outline-primary btn-sm"
+                                           title="Descargar archivo">
+                                            <i class="fas fa-download"></i>
+                                            <span class="d-none d-sm-inline ms-1">Descargar</span>
+                                        </a>
+                                        <button class="btn btn-outline-secondary btn-sm" 
+                                                onclick="copyToClipboard('{{ file.name }}')"
+                                                title="Copiar nombre">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="row mt-4 pt-4 border-top">
+                    <div class="col-6 col-md-3 text-center mb-3">
+                        <div class="text-primary mb-1">
+                            <i class="fas fa-music fa-2x"></i>
+                        </div>
+                        <div class="fw-bold">{{ files|length }}</div>
+                        <small class="text-muted">Archivos</small>
+                    </div>
+                    <div class="col-6 col-md-3 text-center mb-3">
+                        <div class="text-success mb-1">
+                            <i class="fas fa-hdd fa-2x"></i>
+                        </div>
+                        <div class="fw-bold" id="totalSize">Calculando...</div>
+                        <small class="text-muted">Tamaño total</small>
+                    </div>                    <div class="col-6 col-md-3 text-center mb-3">
+                        <div class="text-info mb-1">
+                            <i class="fas fa-file-audio fa-2x"></i>
+                        </div>
+                        <div class="fw-bold" id="flacCount">0</div>
+                        <small class="text-muted">FLAC</small>
+                    </div>
+                    <div class="col-6 col-md-3 text-center mb-3">
+                        <div class="text-warning mb-1">
+                            <i class="fas fa-file-audio fa-2x"></i>
+                        </div>
+                        <div class="fw-bold" id="mp3Count">0</div>
+                        <small class="text-muted">MP3</small>
+                    </div>
+                    <div class="col-6 col-md-3 text-center mb-3">
+                        <div class="text-secondary mb-1">
+                            <i class="fas fa-file-archive fa-2x"></i>
+                        </div>
+                        <div class="fw-bold" id="zipCount">0</div>
+                        <small class="text-muted">ZIP</small>
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- Estado vacío -->
+                <div class="empty-state">
+                    <i class="fas fa-folder-open fa-4x mb-4 text-muted"></i>
+                    <h4 class="text-muted mb-3">No hay archivos descargados</h4>
+                    <p class="text-muted mb-4">Las canciones y playlists que descargues aparecerán aquí</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-gradient btn-lg">
+                        <i class="fas fa-download me-2"></i>Comenzar a Descargar
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Función para copiar texto al portapapeles
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showToast('Nombre copiado al portapapeles', 'success');
+    }, function(err) {
+        showToast('Error al copiar al portapapeles', 'error');
+    });
+}
+
+// Función para mostrar toast notifications
+function showToast(message, type) {
+    const toastDiv = document.createElement('div');
+    toastDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}-custom alert-dismissible fade show position-fixed`;
+    toastDiv.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 250px;
+        max-width: 350px;
+    `;
+    
+    toastDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toastDiv);
+    
+    setTimeout(() => {
+        if (toastDiv.parentNode) {
+            toastDiv.remove();
+        }
+    }, 3000);
+}
+
+// Calcular tamaño total de archivos y estadísticas
+{% if files %}
+document.addEventListener('DOMContentLoaded', function() {
+    const files = [
+        {% for file in files %}
+        {
+            name: "{{ file.name }}",
+            size: {{ file.size.replace(' MB', '') }}
+        },
+        {% endfor %}
+    ];
+    
+    // Calcular tamaño total
+    const totalMB = files.reduce((sum, file) => sum + parseFloat(file.size), 0);
+    
+    let totalSizeText;
+    if (totalMB >= 1024) {
+        totalSizeText = (totalMB / 1024).toFixed(1) + ' GB';
+    } else {
+        totalSizeText = totalMB.toFixed(1) + ' MB';
+    }
+    
+    document.getElementById('totalSize').textContent = totalSizeText;
+    
+    // Contar archivos por extensión
+    let flacCount = 0;
+    let mp3Count = 0;
+    let zipCount = 0;
+    
+    files.forEach(file => {
+        if (file.name.toLowerCase().endsWith('.flac')) {
+            flacCount++;
+        } else if (file.name.toLowerCase().endsWith('.mp3')) {
+            mp3Count++;
+        } else if (file.name.toLowerCase().endsWith('.zip')) {
+            zipCount++;
+        }
+    });
+    
+    document.getElementById('flacCount').textContent = flacCount;
+    document.getElementById('mp3Count').textContent = mp3Count;
+    document.getElementById('zipCount').textContent = zipCount;
+});
+{% endif %}
+
+// Función para refrescar la página (útil para ver nuevas descargas)
+function refreshDownloads() {
+    location.reload();
+}
+
+// Auto-refresh cada 30 segundos si hay descargas activas
+setInterval(() => {
+    // Solo refrescar si no hay modales abiertos o interacciones activas
+    if (!document.querySelector('.modal.show') && !document.activeElement?.matches('button, input, select')) {
+        const lastActivity = localStorage.getItem('lastDownloadActivity');
+        if (lastActivity && Date.now() - parseInt(lastActivity) < 300000) { // 5 minutos
+            refreshDownloads();
+        }
+    }
+}, 30000);
+
+// Mejorar accesibilidad con teclado
+document.addEventListener('keydown', function(e) {
+    // Ctrl + R para refrescar
+    if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        refreshDownloads();
+    }
+    
+    // Escape para cerrar alertas
+    if (e.key === 'Escape') {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            const closeBtn = alert.querySelector('.btn-close');
+            if (closeBtn) closeBtn.click();
+        });
+    }
+});
+
+// Animaciones de entrada para las filas de la tabla
+{% if files %}
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

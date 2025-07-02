@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SoundCloud Downloader{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --primary-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --secondary-gradient: linear-gradient(135deg, #e91e63 0%, #673ab7 100%);
+            --success-color: #10b981;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+            --dark-color: #f8fafc;
+            --light-color: #111827;
+            --card-bg: rgba(17, 24, 39, 0.9);
+            --card-glass-bg: rgba(17, 24, 39, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: rgba(248, 250, 252, 0.8);
+            --border-color: rgba(248, 250, 252, 0.2);
+        }
+
+        /* Light mode variables */
+        [data-theme="light"] {
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-glass-bg: rgba(255, 255, 255, 0.1);
+            --text-primary: #1f2937;
+            --text-secondary: rgba(31, 41, 55, 0.8);
+            --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Default light mode if no theme set */
+        :root:not([data-theme]) {
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-glass-bg: rgba(255, 255, 255, 0.1);
+            --text-primary: #1f2937;
+            --text-secondary: rgba(31, 41, 55, 0.8);
+            --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animaciones y efectos */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Navbar personalizada */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: white !important;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            margin: 0 0.2rem;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }        /* Gradient text for dark mode compatibility */
+        .text-gradient {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        [data-theme="dark"] .text-gradient {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Button gradients */
+        .btn-gradient {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        [data-theme="dark"] .btn-gradient {
+            background: var(--secondary-gradient);
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+
+        [data-theme="dark"] .btn-gradient:hover {
+            box-shadow: 0 8px 25px rgba(233, 30, 99, 0.4);
+        }
+
+        .btn-outline-custom {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            background: transparent;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-custom:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Form controls */
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(107, 114, 128, 0.8);
+        }
+
+        /* Progress bar */
+        .progress {
+            height: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: var(--success-color);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .status-ok {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .status-error {
+            background: var(--error-color);
+            border-color: var(--error-color);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-warning {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Loading shimmer effect */
+        .shimmer-loading {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .shimmer-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        [data-theme="dark"] .shimmer-loading::after {
+            background: linear-gradient(90deg, transparent, rgba(248,250,252,0.1), transparent);
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }[data-theme="dark"] .card-glass {
+            background: var(--card-glass-bg);
+            border: 1px solid rgba(248, 250, 252, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .card-glass:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-white {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .card-white {
+            background: var(--card-bg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .card-white {
+            background: var(--card-bg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Botones personalizados */
+        .btn-gradient {
+            background: var(--secondary-gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+
+        .btn-outline-custom {
+            border: 2px solid white;
+            color: white;
+            background: transparent;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-custom:hover {
+            background: white;
+            color: var(--dark-color);
+            transform: translateY(-2px);
+        }        /* Form controls */
+        .form-control, .form-select {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-glass-bg);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .form-control, 
+        [data-theme="dark"] .form-select {
+            background: rgba(248, 250, 252, 0.05);
+            border-color: rgba(248, 250, 252, 0.2);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: rgba(245, 87, 108, 0.8);
+            box-shadow: 0 0 0 0.2rem rgba(245, 87, 108, 0.2);
+            background: var(--card-bg);
+        }
+
+        [data-theme="dark"] .form-control:focus, 
+        [data-theme="dark"] .form-select:focus {
+            background: rgba(248, 250, 252, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Labels */
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        [data-theme="light"] .form-label {
+            color: white;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            position: relative;
+        }
+
+        .status-ok { 
+            background: var(--success-color);
+        }
+
+        .status-error { 
+            background: var(--error-color);
+        }
+
+        .status-ok::after,
+        .status-error::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-ok::after {
+            background: rgba(16, 185, 129, 0.3);
+        }
+
+        .status-error::after {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        /* Progress bar personalizada */
+        .progress-custom {
+            height: 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .progress-bar-custom {
+            background: var(--secondary-gradient);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-custom::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }        /* Alerts personalizadas */
+        .alert-custom {
+            border: none;
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            border-left: 4px solid;
+        }
+
+        .alert-info-custom {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .alert-info-custom {
+            color: white;
+        }
+
+        .alert-success-custom {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--success-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .alert-success-custom {
+            color: white;
+        }
+
+        .alert-error-custom {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--error-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="light"] .alert-error-custom {
+            color: white;
+        }        /* Tabla responsiva */
+        .table-custom {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .table-custom {
+            background: rgba(248, 250, 252, 0.03);
+        }
+
+        .table-custom th {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 16px;
+        }
+
+        [data-theme="dark"] .table-custom th {
+            background: rgba(248, 250, 252, 0.05);
+        }
+
+        [data-theme="light"] .table-custom th {
+            color: white;
+        }
+
+        .table-custom td {
+            border: none;
+            color: var(--text-secondary);
+            padding: 16px;
+            vertical-align: middle;
+        }
+
+        [data-theme="light"] .table-custom td {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .table-custom tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s ease;
+        }
+
+        [data-theme="dark"] .table-custom tbody tr {
+            border-bottom: 1px solid rgba(248, 250, 252, 0.1);
+        }
+
+        [data-theme="light"] .table-custom tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-custom tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="dark"] .table-custom tbody tr:hover {
+            background: rgba(248, 250, 252, 0.05);
+        }
+
+        /* Spinner personalizado */
+        .spinner-custom {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        [data-theme="light"] .empty-state {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 8px 12px;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: rgba(248, 250, 252, 0.1);
+            border-color: rgba(248, 250, 252, 0.2);
+        }
+
+        [data-theme="dark"] .theme-toggle:hover {
+            background: rgba(248, 250, 252, 0.2);
+        }        /* Text colors for dark mode */
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4,
+        [data-theme="dark"] h5,
+        [data-theme="dark"] h6 {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .text-white-75 {
+            color: rgba(248, 250, 252, 0.75) !important;
+        }
+
+        [data-theme="dark"] .text-white-50 {
+            color: rgba(248, 250, 252, 0.5) !important;
+        }
+
+        /* Form controls dark mode */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background: rgba(17, 24, 39, 0.8);
+            border-color: rgba(248, 250, 252, 0.2);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background: rgba(17, 24, 39, 0.9);
+            border-color: #667eea;
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        [data-theme="dark"] .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Button styles for dark mode */
+        [data-theme="dark"] .btn-outline-custom {
+            border-color: rgba(248, 250, 252, 0.3);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .btn-outline-custom:hover {
+            background: rgba(248, 250, 252, 0.1);
+            border-color: rgba(248, 250, 252, 0.5);
+            color: var(--text-primary);
+        }
+
+        /* Accordion styles for dark mode */
+        [data-theme="dark"] .accordion-item {
+            background: rgba(17, 24, 39, 0.6);
+            border-color: rgba(248, 250, 252, 0.1);
+        }
+
+        [data-theme="dark"] .accordion-button {
+            background: rgba(17, 24, 39, 0.8);
+            color: var(--text-primary);
+            border-color: rgba(248, 250, 252, 0.1);
+        }
+
+        [data-theme="dark"] .accordion-button:not(.collapsed) {
+            background: rgba(17, 24, 39, 0.9);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .accordion-body {
+            background: rgba(17, 24, 39, 0.7);
+            color: var(--text-secondary);
+        }
+
+        /* Navbar dark mode adjustments */
+        [data-theme="dark"] .navbar-custom {
+            background: rgba(17, 24, 39, 0.3);
+        }
+
+        [data-theme="dark"] .navbar-brand,
+        [data-theme="dark"] .nav-link {
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .nav-link:hover {
+            color: white !important;
+            background: rgba(248, 250, 252, 0.1);
+        }
+
+        /* Additional dark mode styles */
+        [data-theme="dark"] body {
+            background: var(--primary-gradient);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .bg-light {
+            background: rgba(17, 24, 39, 0.6) !important;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] code {
+            background: rgba(17, 24, 39, 0.8);
+            color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        [data-theme="dark"] .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: var(--text-primary);
+        }
+
+        /* Progress bar dark mode */
+        [data-theme="dark"] .progress {
+            background: rgba(17, 24, 39, 0.8);
+        }
+
+        /* Status indicators dark mode */
+        [data-theme="dark"] .status-indicator {
+            border: 2px solid var(--text-secondary);
+        }
+
+        [data-theme="dark"] .status-ok {
+            background: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        [data-theme="dark"] .status-error {
+            background: var(--error-color);
+            border-color: var(--error-color);
+        }
+
+        /* Footer dark mode */
+        [data-theme="dark"] footer {
+            background: rgba(17, 24, 39, 0.3);
+            border-top: 1px solid rgba(248, 250, 252, 0.1);
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer .text-white-75 {
+            color: rgba(255, 255, 255, 0.75) !important;
+        }
+
+        footer .text-white-50 {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        [data-theme="dark"] footer .text-white-75 {
+            color: rgba(248, 250, 252, 0.75) !important;
+        }
+
+        [data-theme="dark"] footer .text-white-50 {
+            color: rgba(248, 250, 252, 0.5) !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .card-glass, .card-white {
+                margin: 1rem 0;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .btn-gradient {
+                padding: 10px 20px;
+                font-size: 0.8rem;
+            }
+            
+            .form-control, .form-select {
+                padding: 10px 14px;
+            }
+            
+            .table-responsive {
+                border-radius: 12px;
+                overflow: hidden;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .empty-state {
+                padding: 2rem 1rem;
+            }
+            
+            .empty-state i {
+                font-size: 3rem;
+            }
+        }
+
+        /* Utilities */
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .backdrop-blur {
+            backdrop-filter: blur(20px);
+        }
+
+        /* Cards con glassmorphism */
+        .card-glass {
+            background: var(--card-glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Existing dark mode card styles... */
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-shadow" href="{{ url_for('index') }}">
+                <i class="fab fa-soundcloud me-2"></i>SoundCloud Downloader
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+              <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="fas fa-home me-1"></i>Inicio
+                    </a>
+                    <a class="nav-link" href="{{ url_for('list_downloads') }}">
+                        <i class="fas fa-download me-1"></i>Descargas
+                    </a>
+                    <a class="nav-link" href="{{ url_for('install_dependencies') }}">
+                        <i class="fas fa-cog me-1"></i>Configuración
+                    </a>
+                    <div class="nav-link p-0 ms-2">
+                        <button class="theme-toggle border-0" onclick="toggleTheme()" title="Cambiar tema">
+                            <i id="themeIcon" class="fas fa-moon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>    <!-- Main Content -->
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 text-center">
+        <div class="container">
+            <div class="border-top border-white border-opacity-25 pt-4">
+                <p class="mb-2 text-white-75">
+                    <i class="fab fa-soundcloud me-2"></i>
+                    <strong>SoundCloud Downloader</strong>
+                </p>
+                <p class="mb-0 small text-white-50">
+                    Creado con ❤️ por <strong>Jose Mencia</strong> • 
+                    <i class="fas fa-code me-1"></i>Aplicación web moderna con modo oscuro
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4">
+        <div class="container text-center">
+            <p class="text-white-50 mb-0">
+                <i class="fas fa-heart text-danger"></i> Hecho con amor para la música
+            </p>
+        </div>
+    </footer>    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Dark Mode Toggle Script -->
+    <script>
+        // Dark mode functionality
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            let theme = savedTheme;
+            if (!theme) {
+                theme = prefersDark ? 'dark' : 'light';
+            }
+            
+            setTheme(theme);
+        }
+          function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            
+            // Add smooth transition effect
+            document.body.style.transition = 'background 0.3s ease, color 0.3s ease';
+            
+            // Dispatch custom event for theme change
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
+            
+            // Show theme change notification
+            showThemeChangeNotification(theme);
+        }
+        
+        function showThemeChangeNotification(theme) {
+            const notification = document.createElement('div');
+            notification.className = 'position-fixed top-0 start-50 translate-middle-x mt-3';
+            notification.style.zIndex = '9999';
+            notification.innerHTML = `
+                <div class="alert alert-info-custom alert-dismissible fade show" style="min-width: 200px;">
+                    <i class="fas fa-${theme === 'dark' ? 'moon' : 'sun'} me-2"></i>
+                    Modo ${theme === 'dark' ? 'oscuro' : 'claro'} activado
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 2000);
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+          // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            
+            // Add keyboard shortcut for theme toggle (Ctrl + Shift + T)
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+        });
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
