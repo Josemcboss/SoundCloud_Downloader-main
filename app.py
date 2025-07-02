@@ -179,11 +179,56 @@ def download_file(filename):
         downloads_dir = 'descargas'
         filepath = os.path.join(downloads_dir, filename)
         if os.path.exists(filepath):
-            return send_file(filepath, as_attachment=True)
+            # Detectar si es una solicitud desde el navegador web
+            user_agent = request.headers.get('User-Agent', '')
+            is_browser = any(browser in user_agent.lower() for browser in ['chrome', 'firefox', 'safari', 'edge', 'opera'])
+            
+            if is_browser:
+                # Para navegadores, forzar descarga directa
+                return send_file(filepath, as_attachment=True, download_name=filename)
+            else:
+                # Para otros clientes (como curl, wget, etc.)
+                return send_file(filepath, as_attachment=True)
         else:
             return jsonify({'error': 'Archivo no encontrado'}), 404
+    except Exception as e:        return jsonify({'error': f'Error al descargar archivo: {str(e)}'}), 500
+
+@app.route('/auto_download/<download_id>')
+def auto_download(download_id):
+    """Iniciar descarga automática de archivos recién descargados"""
+    try:
+        downloads_dir = 'descargas'
+        # Buscar archivos creados en los últimos 5 minutos
+        recent_files = []
+        current_time = time.time()
+        
+        if os.path.exists(downloads_dir):
+            for filename in os.listdir(downloads_dir):
+                if filename.endswith(('.mp3', '.flac', '.wav', '.m4a', '.zip')):
+                    filepath = os.path.join(downloads_dir, filename)
+                    if os.path.isfile(filepath):
+                        file_time = os.path.getmtime(filepath)
+                        # Si el archivo fue creado en los últimos 5 minutos
+                        if current_time - file_time < 300:  # 5 minutos
+                            recent_files.append(filename)
+        
+        if recent_files:
+            # Si hay un solo archivo, descargarlo directamente
+            if len(recent_files) == 1:
+                filepath = os.path.join(downloads_dir, recent_files[0])
+                return send_file(filepath, as_attachment=True, download_name=recent_files[0])
+            else:
+                # Si hay múltiples archivos, retornar lista para que el usuario elija
+                return jsonify({
+                    'success': True,
+                    'files': recent_files,
+                    'message': f'Se encontraron {len(recent_files)} archivos recientes'
+                })
+        else:
+            return jsonify({'success': False, 'message': 'No se encontraron archivos recientes'})
+            
     except Exception as e:
-        return jsonify({'error': f'Error al descargar archivo: {str(e)}'}), 500
+        return jsonify({'error': f'Error en descarga automática: {str(e)}'}), 500
 
 
 if __name__ == '__main__':

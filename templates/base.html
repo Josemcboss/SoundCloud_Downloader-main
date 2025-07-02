@@ -10,9 +10,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXXX"
+      <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8572512148825737"
             crossorigin="anonymous"></script>
       <style>
         :root {
@@ -361,10 +360,34 @@
         [data-theme="dark"] .form-control:focus, 
         [data-theme="dark"] .form-select:focus {
             background: rgba(248, 250, 252, 0.1);
+        }        .form-control::placeholder {
+            color: var(--text-secondary);
         }
 
-        .form-control::placeholder {
-            color: var(--text-secondary);
+        /* Form switches */
+        .form-check-input {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: var(--border-color);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .form-check-input:focus {
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+        }
+
+        [data-theme="dark"] .form-check-input {
+            background-color: rgba(17, 24, 39, 0.8);
+            border-color: rgba(248, 250, 252, 0.2);
+        }
+
+        [data-theme="dark"] .form-check-input:checked {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
         }
 
         /* Labels */
@@ -933,7 +956,7 @@
                 <!-- AdSense Banner Ad -->
                 <ins class="adsbygoogle"
                      style="display:block"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                     data-ad-client="ca-pub-8572512148825737"
                      data-ad-slot="XXXXXXXXXX"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
@@ -951,7 +974,7 @@
                 <!-- AdSense Banner Ad -->
                 <ins class="adsbygoogle"
                      style="display:block"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                     data-ad-client="ca-pub-8572512148825737"
                      data-ad-slot="XXXXXXXXXX"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>

@@ -72,13 +72,17 @@
                                     <small class="text-muted">{{ file.modified }}</small>
                                 </td>
                                 <td class="text-center">
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ url_for('download_file', filename=file.name) }}" 
+                                    <div class="btn-group" role="group">                                        <a href="{{ url_for('download_file', filename=file.name) }}" 
                                            class="btn btn-outline-primary btn-sm"
                                            title="Descargar archivo">
                                             <i class="fas fa-download"></i>
                                             <span class="d-none d-sm-inline ms-1">Descargar</span>
                                         </a>
+                                        <button class="btn btn-outline-success btn-sm" 
+                                                onclick="autoDownloadFile('{{ file.name }}')"
+                                                title="Descarga automática">
+                                            <i class="fas fa-bolt"></i>
+                                        </button>
                                         <button class="btn btn-outline-secondary btn-sm" 
                                                 onclick="copyToClipboard('{{ file.name }}')"
                                                 title="Copiar nombre">
@@ -152,7 +156,7 @@
                 <!-- AdSense Sidebar Ad -->
                 <ins class="adsbygoogle"
                      style="display:block"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                     data-ad-client="ca-pub-8572512148825737"
                      data-ad-slot="XXXXXXXXXX"
                      data-ad-format="auto"
                      data-full-width-responsive="true"></ins>
@@ -307,5 +311,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 2000);
 });
+
+// Función para descarga automática de archivos individuales
+function autoDownloadFile(filename) {
+    try {
+        const downloadUrl = `/download_file/${encodeURIComponent(filename)}`;
+        
+        // Crear un enlace temporal para forzar la descarga
+        const tempLink = document.createElement('a');
+        tempLink.href = downloadUrl;
+        tempLink.style.display = 'none';
+        tempLink.download = filename;
+        
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        
+        showToast('Iniciando descarga automática...', 'success');
+    } catch (error) {
+        console.error('Error en descarga automática:', error);
+        showToast('Error en descarga automática', 'error');
+    }
+}
 </script>
 {% endblock %}

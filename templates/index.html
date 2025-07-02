@@ -58,13 +58,25 @@
                         <div class="col-md-6" id="playlistOptions" style="display: none;">
                             <label for="zipOption" class="form-label">
                                 <i class="fas fa-archive me-2"></i>Formato de playlist
-                            </label>
-                            <select class="form-select" id="zipOption">
+                            </label>                            <select class="form-select" id="zipOption">
                                 <option value="separate">📁 Archivos separados</option>
                                 <option value="zip">📦 Comprimir en ZIP</option>
                             </select>
                             <div class="form-text text-muted mt-1">
                                 <small>El ZIP facilita la descarga de playlists grandes</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opción de descarga automática -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoDownload" checked>
+                            <label class="form-check-label" for="autoDownload">
+                                <i class="fas fa-download me-2"></i>Descargar automáticamente al completar
+                            </label>
+                            <div class="form-text text-muted mt-1">
+                                <small>El archivo se descargará automáticamente a tu dispositivo</small>
                             </div>
                         </div>
                     </div>
@@ -119,11 +131,10 @@
                 <!-- Middle Rectangle Ad -->
                 <div class="ad-container mt-4">
                     <div class="ad-label">Publicidad</div>
-                    <div class="ad-rectangle">
-                        <!-- AdSense Rectangle Ad -->
+                    <div class="ad-rectangle">                        <!-- AdSense Rectangle Ad -->
                         <ins class="adsbygoogle"
                              style="display:block"
-                             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                             data-ad-client="ca-pub-8572512148825737"
                              data-ad-slot="XXXXXXXXXX"
                              data-ad-format="rectangle"></ins>
                     </div>
@@ -247,10 +258,40 @@ function handleDownloadComplete() {
     
     showAlert('¡Descarga completada exitosamente!', 'success');
     
+    // Verificar si descarga automática está habilitada
+    const autoDownload = document.getElementById('autoDownload').checked;
+    if (autoDownload && currentDownloadId) {
+        setTimeout(() => {
+            initiateAutoDownload(currentDownloadId);
+        }, 1000);
+    }
+    
     setTimeout(() => {
         hideProgressArea();
         resetForm();
     }, 3000);
+}
+
+// Función para iniciar descarga automática
+function initiateAutoDownload(downloadId) {
+    try {
+        const autoDownloadUrl = `/auto_download/${downloadId}`;
+        
+        // Crear un enlace temporal para forzar la descarga
+        const tempLink = document.createElement('a');
+        tempLink.href = autoDownloadUrl;
+        tempLink.style.display = 'none';
+        tempLink.target = '_blank';
+        
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        
+        showAlert('Iniciando descarga automática...', 'success');
+    } catch (error) {
+        console.error('Error en descarga automática:', error);
+        showAlert('Error en descarga automática. Ve a la página de Descargas.', 'error');
+    }
 }
 
 // Manejar error de descarga
