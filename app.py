@@ -172,7 +172,7 @@ def list_downloads():
     
     return render_template('downloads.html', files=files)
 
-@app.route('/download_file/<filename>')
+@app.route('/download_file/<path:filename>')
 def download_file(filename):
     """Descargar archivo individual"""
     try:
@@ -181,11 +181,9 @@ def download_file(filename):
         if os.path.exists(filepath):
             return send_file(filepath, as_attachment=True)
         else:
-            flash('Archivo no encontrado', 'error')
-            return redirect(url_for('list_downloads'))
+            return jsonify({'error': 'Archivo no encontrado'}), 404
     except Exception as e:
-        flash(f'Error al descargar archivo: {str(e)}', 'error')
-        return redirect(url_for('list_downloads'))
+        return jsonify({'error': f'Error al descargar archivo: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
@@ -193,4 +191,9 @@ if __name__ == '__main__':
     if not os.path.exists('descargas'):
         os.makedirs('descargas')
     
+    # Configuración para desarrollo local
     app.run(debug=True, host='0.0.0.0', port=5000)
+else:
+    # Configuración para producción
+    if not os.path.exists('descargas'):
+        os.makedirs('descargas')
