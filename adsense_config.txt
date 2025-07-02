@@ -1,0 +1,21 @@
+# Configuración de Google AdSense
+# Reemplaza con tus propios IDs de AdSense
+
+# Publisher ID (ca-pub-XXXXXXXXXXXXXXXXX)
+ADSENSE_PUBLISHER_ID = "ca-pub-XXXXXXXXXXXXXXXXX"
+
+# Ad Unit IDs para diferentes tipos de anuncios
+ADSENSE_BANNER_TOP_ID = "XXXXXXXXXX"
+ADSENSE_BANNER_BOTTOM_ID = "XXXXXXXXXX"
+ADSENSE_RECTANGLE_ID = "XXXXXXXXXX"
+ADSENSE_SIDEBAR_ID = "XXXXXXXXXX"
+
+# Instrucciones:
+# 1. Ve a tu cuenta de Google AdSense (https://www.google.com/adsense/)
+# 2. Crea una nueva propiedad web para tu dominio
+# 3. Crea unidades de anuncio para cada tipo:
+#    - Banner (728x90 o responsive)
+#    - Rectangle (300x250)
+#    - Sidebar (160x600 o responsive)
+# 4. Reemplaza los valores XXXXXXXXX con tus IDs reales
+# 5. Guarda este archivo como .env para mantener tus claves privadas

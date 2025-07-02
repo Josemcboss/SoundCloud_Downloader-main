@@ -91,9 +91,7 @@
                             <small id="statusText" class="text-white-75">Preparando descarga...</small>
                         </div>
                     </div>
-                </div>
-
-                <!-- Información adicional -->
+                </div>                <!-- Información adicional -->
                 <div class="row mt-4 text-center">
                     <div class="col-md-4 mb-3">
                         <div class="text-primary mb-2">
@@ -115,6 +113,19 @@
                         </div>
                         <h6 class="fw-semibold">Responsivo</h6>
                         <small class="text-muted">Funciona en móvil y PC</small>
+                    </div>
+                </div>
+
+                <!-- Middle Rectangle Ad -->
+                <div class="ad-container mt-4">
+                    <div class="ad-label">Publicidad</div>
+                    <div class="ad-rectangle">
+                        <!-- AdSense Rectangle Ad -->
+                        <ins class="adsbygoogle"
+                             style="display:block"
+                             data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                             data-ad-slot="XXXXXXXXXX"
+                             data-ad-format="rectangle"></ins>
                     </div>
                 </div>
             </div>
@@ -355,5 +366,17 @@ function togglePlaylistOptions() {
         playlistOptions.style.display = 'none';
     }
 }
+
+// Initialize ads for this page
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize rectangle ad
+    setTimeout(() => {
+        try {
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.log('Rectangle ad initialization failed:', e);
+        }
+    }, 1500);
+});
 </script>
 {% endblock %}

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center fade-in">
-    <div class="col-lg-10 col-xl-8">
+    <div class="col-lg-8 col-xl-6">
         <div class="card-white">
             <div class="card-body p-4 p-md-5">
                 <!-- Header -->
@@ -140,7 +140,22 @@
                         <i class="fas fa-download me-2"></i>Comenzar a Descargar
                     </a>
                 </div>
-                {% endif %}
+                {% endif %}            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar Ad -->
+    <div class="col-lg-4 col-xl-2 d-none d-lg-block">
+        <div class="ad-container sticky-top" style="top: 2rem;">
+            <div class="ad-label">Publicidad</div>
+            <div class="ad-sidebar">
+                <!-- AdSense Sidebar Ad -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
             </div>
         </div>
     </div>
@@ -281,5 +296,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 {% endif %}
+
+// Initialize sidebar ad
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        try {
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.log('Sidebar ad initialization failed:', e);
+        }
+    }, 2000);
+});
 </script>
 {% endblock %}
