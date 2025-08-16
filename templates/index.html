@@ -50,30 +50,52 @@
                             <label for="type" class="form-label">
                                 <i class="fas fa-music me-2"></i>Tipo de descarga
                             </label>
-<select class="form-select" id="type">
+                            <select class="form-select" id="type">
                                 <option value="single">🎵 Canción individual</option>
                                 <option value="playlist">📋 Playlist completa</option>
                             </select>
                         </div>
-                        <div class="col-md-6" id="playlistInfo" style="display: none;">
-                            <div class="alert alert-info-custom h-100 d-flex align-items-center">
-                                <div>
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <small>Las playlists se descargarán como un archivo ZIP.</small>
-                                </div>
+                        <div class="col-md-6" id="playlistOptions" style="display: none;">
+                            <label for="playlistMode" class="form-label">
+                                <i class="fas fa-cog me-2"></i>Modo de playlist
+                            </label>
+                            <select class="form-select" id="playlistMode">
+                                <option value="individual">📁 Archivos individuales - Descarga automática separada</option>
+                                <option value="zip">📦 Archivo ZIP - Descarga automática comprimida</option>
+                            </select>
+                            <div class="form-text text-muted mt-1">
+                                <small id="playlistModeInfo">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Cada canción se descargará automáticamente por separado
+                                </small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Opción de descarga automática -->
+                    <!-- Opciones de descarga automática -->
                     <div class="mb-4">
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="autoDownload" checked>
                             <label class="form-check-label" for="autoDownload">
-                                <i class="fas fa-download me-2"></i>Descargar automáticamente al completar
+                                <i class="fas fa-download me-2"></i>Descarga automática habilitada
                             </label>
                             <div class="form-text text-muted mt-1">
-                                <small>El archivo se descargará automáticamente a tu dispositivo</small>
+                                <small id="autoDownloadInfo">Los archivos se descargarán automáticamente a tu dispositivo</small>
+                            </div>
+                        </div>
+                        
+                        <div id="autoDownloadOptions" class="ms-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="downloadTiming" id="downloadImmediate" value="immediate" checked>
+                                <label class="form-check-label" for="downloadImmediate">
+                                    <i class="fas fa-bolt me-1"></i>Descargar cada canción al completarse
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="downloadTiming" id="downloadAtEnd" value="at_end">
+                                <label class="form-check-label" for="downloadAtEnd">
+                                    <i class="fas fa-clock me-1"></i>Descargar todas al finalizar
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -98,6 +120,37 @@
                                      role="progressbar" style="width: 0%"></div>
                             </div>
                             <small id="statusText" class="text-white-75">Preparando descarga...</small>
+                            
+                            <!-- Lista de archivos descargados (para playlists) -->
+                            <div id="downloadedFilesList" class="mt-3" style="display: none;">
+                                <h6 class="text-white mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>Archivos completados:
+                                </h6>
+                                <div id="filesList" class="list-group list-group-flush">
+                                    <!-- Los archivos se agregarán dinámicamente aquí -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Archivos Descargados -->
+                <div id="downloadsSection" class="mt-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-white mb-0">
+                            <i class="fas fa-download text-primary me-2"></i>Archivos Descargados
+                        </h3>
+                        <button class="btn btn-outline-custom btn-sm" onclick="refreshDownloads()">
+                            <i class="fas fa-sync-alt me-2"></i>Actualizar
+                        </button>
+                    </div>
+                    
+                    <div id="downloadedFilesContainer">
+                        <!-- Los archivos descargados se cargarán aquí dinámicamente -->
+                        <div class="empty-state text-center py-4">
+                            <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
+                            <h5 class="text-muted mb-2">No hay archivos descargados</h5>
+                            <p class="text-muted">Las canciones y playlists que descargues aparecerán aquí</p>
                         </div>
                     </div>
                 </div>                <!-- Información adicional -->
@@ -143,10 +196,102 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* Estilos para la lista de archivos descargados */
+#downloadedFilesList .list-group-item {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+#downloadedFilesList .list-group-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+}
+
+#downloadedFilesList .list-group-item i {
+    color: var(--success-color);
+}
+
+[data-theme="dark"] #downloadedFilesList .list-group-item {
+    background: rgba(17, 24, 39, 0.6);
+    border-color: rgba(248, 250, 252, 0.2);
+    color: rgba(248, 250, 252, 0.9);
+}
+
+[data-theme="dark"] #downloadedFilesList .list-group-item:hover {
+    background: rgba(17, 24, 39, 0.8);
+}
+
+/* Animación para el botón de descarga manual */
+.pulse-animation {
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.6);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    }
+}
+
+/* Estilos para la sección de descargas integrada */
+#downloadsSection {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+[data-theme="dark"] #downloadsSection {
+    background: rgba(17, 24, 39, 0.3);
+    border-color: rgba(248, 250, 252, 0.1);
+}
+
+#downloadsSection h3 {
+    color: white;
+}
+
+[data-theme="dark"] #downloadsSection h3 {
+    color: var(--text-primary);
+}
+
+/* Animación de entrada para archivos */
+.file-entry {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 <script>
 // Variables globales
 let currentDownloadId = null;
 let progressInterval = null;
+let downloadedFiles = [];
+let isPlaylist = false;
+let refreshInterval = null;
 
 // Form submission
 document.getElementById('downloadForm').addEventListener('submit', async function(e) {
@@ -176,8 +321,12 @@ document.getElementById('downloadForm').addEventListener('submit', async functio
     document.getElementById('progressArea').style.display = 'block';
     document.getElementById('progressArea').scrollIntoView({ behavior: 'smooth' });
     
-    // Determinar la opción de ZIP
-    const zipOption = (type === 'playlist') ? 'zip' : 'separate';
+    // Determinar la opción de descarga para playlists
+    let zipOption = 'separate';
+    if (type === 'playlist') {
+        const playlistMode = document.getElementById('playlistMode').value;
+        zipOption = playlistMode === 'zip' ? 'zip' : 'separate';
+    }
 
     try {
         const response = await fetch('/download', {
@@ -196,6 +345,8 @@ document.getElementById('downloadForm').addEventListener('submit', async functio
         
         if (result.success) {
             currentDownloadId = result.download_id;
+            isPlaylist = (type === 'playlist');
+            downloadedFiles = [];
             monitorProgress(result.download_id);
         } else {
             showAlert(result.message, 'error');
@@ -224,6 +375,12 @@ function monitorProgress(downloadId) {
             // Actualizar UI
             updateProgressUI(data.progress.progress, data.progress.status);
             
+            // Para playlists con descarga inmediata, verificar si hay nuevos archivos
+            if (isPlaylist && document.getElementById('autoDownload').checked && 
+                document.querySelector('input[name="downloadTiming"]:checked').value === 'immediate') {
+                checkForNewFiles(downloadId);
+            }
+            
             if (data.status === 'completed') {
                 handleDownloadComplete();
             } else if (data.status === 'error') {
@@ -235,6 +392,29 @@ function monitorProgress(downloadId) {
             handleDownloadError('Error al verificar el estado de descarga');
         }
     }, 2000);
+}
+
+// Verificar si hay nuevos archivos listos para descarga individual
+async function checkForNewFiles(downloadId) {
+    try {
+        // Esta función podría expandirse para descargar archivos individuales
+        // tan pronto como estén listos, en lugar de esperar a que termine toda la playlist
+        
+        // Por ahora, mantenemos el comportamiento actual pero con mejor feedback
+        const statusText = document.getElementById('statusText').textContent;
+        if (statusText.includes('Completada canción')) {
+            const match = statusText.match(/Completada canción (\d+)\/(\d+)/);
+            if (match) {
+                const completed = parseInt(match[1]);
+                const total = parseInt(match[2]);
+                
+                // Mostrar progreso más detallado
+                showAlert(`Canción ${completed}/${total} completada`, 'success');
+            }
+        }
+    } catch (error) {
+        console.error('Error checking for new files:', error);
+    }
 }
 
 // Actualizar UI de progreso
@@ -257,26 +437,54 @@ function handleDownloadComplete() {
     progressBar.classList.remove('progress-bar-custom');
     progressBar.classList.add('bg-success');
     
-    showAlert('¡Descarga completada exitosamente!', 'success');
-    
     // Verificar si descarga automática está habilitada
     const autoDownload = document.getElementById('autoDownload').checked;
     if (autoDownload && currentDownloadId) {
-        setTimeout(() => {
-            initiateAutoDownload(currentDownloadId);
-        }, 1000);
+        const downloadTiming = document.querySelector('input[name="downloadTiming"]:checked').value;
+        const playlistMode = document.getElementById('playlistMode').value;
+        const isPlaylistType = document.getElementById('type').value === 'playlist';
+        
+        // Mensaje personalizado según el tipo de descarga
+        let completionMessage = '¡Descarga completada exitosamente!';
+        if (isPlaylistType) {
+            if (playlistMode === 'zip') {
+                completionMessage = '¡Playlist comprimida en ZIP y lista para descarga automática!';
+            } else {
+                completionMessage = '¡Todas las canciones listas para descarga automática individual!';
+            }
+        } else {
+            completionMessage = '¡Canción lista para descarga automática!';
+        }
+        
+        showAlert(completionMessage, 'success');
+        
+        if (downloadTiming === 'immediate') {
+            // Para descargas inmediatas, iniciar descarga automática
+            setTimeout(() => {
+                initiateAutoDownload(currentDownloadId);
+            }, 1000);
+        } else {
+            // Para descargas al final, mostrar botón manual
+            showManualDownloadOption();
+        }
+    } else {
+        showAlert('¡Descarga completada! Los archivos aparecen en la lista de abajo.', 'success');
     }
     
     setTimeout(() => {
         hideProgressArea();
         resetForm();
-    }, 3000);
+        // Actualizar la lista de archivos descargados
+        loadDownloadedFiles();
+    }, 5000);
 }
 
 // Función para iniciar descarga automática
 function initiateAutoDownload(downloadId) {
     try {
         const autoDownloadUrl = `/auto_download/${downloadId}`;
+        const isPlaylistType = document.getElementById('type').value === 'playlist';
+        const playlistMode = document.getElementById('playlistMode').value;
         
         // Crear un enlace temporal para forzar la descarga
         const tempLink = document.createElement('a');
@@ -288,11 +496,65 @@ function initiateAutoDownload(downloadId) {
         tempLink.click();
         document.body.removeChild(tempLink);
         
-        showAlert('Iniciando descarga automática...', 'success');
+        // Mensaje personalizado según el tipo de descarga
+        let downloadMessage = 'Iniciando descarga automática...';
+        if (isPlaylistType) {
+            if (playlistMode === 'zip') {
+                downloadMessage = 'Descargando automáticamente el archivo ZIP con todas las canciones...';
+            } else {
+                downloadMessage = 'Descargando automáticamente todas las canciones por separado...';
+            }
+        } else {
+            downloadMessage = 'Descargando automáticamente la canción...';
+        }
+        
+        showAlert(downloadMessage, 'success');
     } catch (error) {
         console.error('Error en descarga automática:', error);
-        showAlert('Error en descarga automática. Ve a la página de Descargas.', 'error');
+        showAlert('Error en descarga automática. Ve a la página de Descargas para obtener tus archivos.', 'error');
     }
+}
+
+// Función para mostrar opción de descarga manual
+function showManualDownloadOption() {
+    const progressArea = document.getElementById('progressArea');
+    const cardBody = progressArea.querySelector('.card-body');
+    const isPlaylistType = document.getElementById('type').value === 'playlist';
+    const playlistMode = document.getElementById('playlistMode').value;
+    
+    // Texto del botón según el tipo de descarga
+    let buttonText = 'Descargar Archivos';
+    let buttonIcon = 'fas fa-download';
+    
+    if (isPlaylistType) {
+        if (playlistMode === 'zip') {
+            buttonText = 'Descargar ZIP Automáticamente';
+            buttonIcon = 'fas fa-file-archive';
+        } else {
+            buttonText = 'Descargar Canciones Individuales';
+            buttonIcon = 'fas fa-music';
+        }
+    } else {
+        buttonText = 'Descargar Canción';
+        buttonIcon = 'fas fa-download';
+    }
+    
+    // Agregar botón de descarga manual
+    const downloadButton = document.createElement('div');
+    downloadButton.className = 'mt-3 text-center';
+    downloadButton.innerHTML = `
+        <button class="btn btn-success btn-lg pulse-animation" onclick="initiateAutoDownload('${currentDownloadId}')">
+            <i class="${buttonIcon} me-2"></i>${buttonText}
+        </button>
+        <div class="mt-2">
+            <small class="text-white-75">
+                <i class="fas fa-info-circle me-1"></i>
+                Los archivos se descargarán automáticamente a tu dispositivo
+            </small>
+        </div>
+    `;
+    
+    cardBody.appendChild(downloadButton);
 }
 
 // Manejar error de descarga
@@ -397,22 +659,293 @@ function updateDownloadType() {
 
 document.getElementById('url').addEventListener('input', updateDownloadType);
 document.getElementById('type').addEventListener('change', togglePlaylistInfo);
+document.getElementById('playlistMode').addEventListener('change', updatePlaylistModeInfo);
+document.getElementById('autoDownload').addEventListener('change', updateAutoDownloadInfo);
+
+// Event listeners para las opciones de timing de descarga
+document.querySelectorAll('input[name="downloadTiming"]').forEach(radio => {
+    radio.addEventListener('change', updateAutoDownloadInfo);
+});
 
 
-// Función para mostrar/ocultar el mensaje informativo de playlists
+// Función para mostrar/ocultar opciones de playlist
 function togglePlaylistInfo() {
     const typeSelect = document.getElementById('type');
-    const playlistInfo = document.getElementById('playlistInfo');
+    const playlistOptions = document.getElementById('playlistOptions');
     
     if (typeSelect.value === 'playlist') {
-        playlistInfo.style.display = 'block';
+        playlistOptions.style.display = 'block';
+        updatePlaylistModeInfo();
     } else {
-        playlistInfo.style.display = 'none';
+        playlistOptions.style.display = 'none';
+    }
+    
+    updateAutoDownloadInfo();
+}
+
+// Función para actualizar información del modo de playlist
+function updatePlaylistModeInfo() {
+    const playlistMode = document.getElementById('playlistMode').value;
+    const playlistModeInfo = document.getElementById('playlistModeInfo');
+    
+    if (playlistMode === 'individual') {
+        playlistModeInfo.innerHTML = `
+            <i class="fas fa-info-circle me-1"></i>
+            Cada canción se descargará automáticamente por separado - Ideal para escuchar individualmente
+        `;
+    } else {
+        playlistModeInfo.innerHTML = `
+            <i class="fas fa-info-circle me-1"></i>
+            Todas las canciones se comprimirán automáticamente en un solo archivo ZIP - Ideal para guardar
+        `;
+    }
+}
+
+// Función para actualizar información de descarga automática
+function updateAutoDownloadInfo() {
+    const typeSelect = document.getElementById('type');
+    const autoDownloadInfo = document.getElementById('autoDownloadInfo');
+    const autoDownloadOptions = document.getElementById('autoDownloadOptions');
+    const autoDownload = document.getElementById('autoDownload');
+    
+    if (autoDownload.checked) {
+        autoDownloadOptions.style.display = 'block';
+        
+        if (typeSelect.value === 'playlist') {
+            autoDownloadInfo.textContent = 'Las canciones de la playlist se descargarán según la opción seleccionada';
+        } else {
+            autoDownloadInfo.textContent = 'La canción se descargará automáticamente a tu dispositivo';
+        }
+    } else {
+        autoDownloadOptions.style.display = 'none';
+        autoDownloadInfo.textContent = 'Los archivos estarán disponibles en la página de Descargas';
+    }
+}
+
+// Función para cargar archivos descargados
+async function loadDownloadedFiles() {
+    try {
+        const response = await fetch('/api/downloads');
+        const data = await response.json();
+        
+        const container = document.getElementById('downloadedFilesContainer');
+        
+        if (data.files && data.files.length > 0) {
+            container.innerHTML = generateFilesTable(data.files);
+            calculateStatistics(data.files);
+        } else {
+            container.innerHTML = `
+                <div class="empty-state text-center py-4">
+                    <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
+                    <h5 class="text-muted mb-2">No hay archivos descargados</h5>
+                    <p class="text-muted">Las canciones y playlists que descargues aparecerán aquí</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading downloads:', error);
+    }
+}
+
+// Función para generar la tabla de archivos
+function generateFilesTable(files) {
+    return `
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-music me-2"></i>Archivo</th>
+                        <th class="d-none d-md-table-cell"><i class="fas fa-weight-hanging me-2"></i>Tamaño</th>
+                        <th class="d-none d-sm-table-cell"><i class="fas fa-calendar me-2"></i>Fecha</th>
+                        <th class="text-center"><i class="fas fa-cog me-2"></i>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${files.map((file, index) => `
+                        <tr class="align-middle file-entry" style="animation-delay: ${index * 0.1}s">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        ${getFileIcon(file.name)}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-truncate" style="max-width: 250px;" title="${file.name}">
+                                            ${file.name}
+                                        </div>
+                                        <div class="small text-muted d-md-none">
+                                            ${file.size} • ${file.modified}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="badge bg-light text-dark px-3 py-2">${file.size}</span>
+                            </td>
+                            <td class="d-none d-sm-table-cell">
+                                <small class="text-muted">${file.modified}</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="/download_file/${encodeURIComponent(file.name)}" 
+                                       class="btn btn-outline-primary btn-sm"
+                                       title="Descargar archivo">
+                                        <i class="fas fa-download"></i>
+                                        <span class="d-none d-sm-inline ms-1">Descargar</span>
+                                    </a>
+                                    <button class="btn btn-outline-success btn-sm" 
+                                            onclick="autoDownloadFile('${file.name}')"
+                                            title="Descarga automática">
+                                        <i class="fas fa-bolt"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" 
+                                            onclick="copyToClipboard('${file.name}')"
+                                            title="Copiar nombre">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="row mt-4 pt-4 border-top">
+            <div class="col-6 col-md-3 text-center mb-3">
+                <div class="text-primary mb-1">
+                    <i class="fas fa-music fa-2x"></i>
+                </div>
+                <div class="fw-bold" id="totalFiles">${files.length}</div>
+                <small class="text-muted">Archivos</small>
+            </div>
+            <div class="col-6 col-md-3 text-center mb-3">
+                <div class="text-success mb-1">
+                    <i class="fas fa-hdd fa-2x"></i>
+                </div>
+                <div class="fw-bold" id="totalSize">Calculando...</div>
+                <small class="text-muted">Tamaño total</small>
+            </div>
+            <div class="col-6 col-md-3 text-center mb-3">
+                <div class="text-info mb-1">
+                    <i class="fas fa-file-audio fa-2x"></i>
+                </div>
+                <div class="fw-bold" id="flacCount">0</div>
+                <small class="text-muted">FLAC</small>
+            </div>
+            <div class="col-6 col-md-3 text-center mb-3">
+                <div class="text-warning mb-1">
+                    <i class="fas fa-file-audio fa-2x"></i>
+                </div>
+                <div class="fw-bold" id="mp3Count">0</div>
+                <small class="text-muted">MP3</small>
+            </div>
+            <div class="col-6 col-md-3 text-center mb-3">
+                <div class="text-secondary mb-1">
+                    <i class="fas fa-file-archive fa-2x"></i>
+                </div>
+                <div class="fw-bold" id="zipCount">0</div>
+                <small class="text-muted">ZIP</small>
+            </div>
+        </div>
+    `;
+}
+
+// Función para obtener el icono del archivo
+function getFileIcon(filename) {
+    if (filename.endsWith('.zip')) {
+        return '<i class="fas fa-file-archive text-warning fa-lg"></i>';
+    } else if (filename.endsWith('.flac')) {
+        return '<i class="fas fa-file-audio text-success fa-lg"></i>';
+    } else if (filename.endsWith('.mp3')) {
+        return '<i class="fas fa-file-audio text-primary fa-lg"></i>';
+    } else {
+        return '<i class="fas fa-file-audio text-info fa-lg"></i>';
+    }
+}
+
+// Función para calcular estadísticas
+function calculateStatistics(files) {
+    // Calcular tamaño total
+    const totalMB = files.reduce((sum, file) => {
+        const size = parseFloat(file.size.replace(' MB', ''));
+        return sum + size;
+    }, 0);
+    
+    let totalSizeText;
+    if (totalMB >= 1024) {
+        totalSizeText = (totalMB / 1024).toFixed(1) + ' GB';
+    } else {
+        totalSizeText = totalMB.toFixed(1) + ' MB';
+    }
+    
+    document.getElementById('totalSize').textContent = totalSizeText;
+    
+    // Contar archivos por extensión
+    let flacCount = 0;
+    let mp3Count = 0;
+    let zipCount = 0;
+    
+    files.forEach(file => {
+        if (file.name.toLowerCase().endsWith('.flac')) {
+            flacCount++;
+        } else if (file.name.toLowerCase().endsWith('.mp3')) {
+            mp3Count++;
+        } else if (file.name.toLowerCase().endsWith('.zip')) {
+            zipCount++;
+        }
+    });
+    
+    document.getElementById('flacCount').textContent = flacCount;
+    document.getElementById('mp3Count').textContent = mp3Count;
+    document.getElementById('zipCount').textContent = zipCount;
+}
+
+// Función para refrescar descargas
+function refreshDownloads() {
+    loadDownloadedFiles();
+    showAlert('Lista de archivos actualizada', 'success');
+}
+
+// Función para copiar texto al portapapeles
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showAlert('Nombre copiado al portapapeles', 'success');
+    }, function(err) {
+        showAlert('Error al copiar al portapapeles', 'error');
+    });
+}
+
+// Función para descarga automática de archivos individuales
+function autoDownloadFile(filename) {
+    try {
+        const downloadUrl = `/download_file/${encodeURIComponent(filename)}`;
+        
+        // Crear un enlace temporal para forzar la descarga
+        const tempLink = document.createElement('a');
+        tempLink.href = downloadUrl;
+        tempLink.style.display = 'none';
+        tempLink.download = filename;
+        
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        
+        showAlert('Iniciando descarga automática...', 'success');
+    } catch (error) {
+        console.error('Error en descarga automática:', error);
+        showAlert('Error en descarga automática', 'error');
     }
 }
 
 // Initialize ads for this page
 document.addEventListener('DOMContentLoaded', function() {
+    // Cargar archivos descargados al inicio
+    loadDownloadedFiles();
+    
+    // Actualizar cada 30 segundos
+    refreshInterval = setInterval(loadDownloadedFiles, 30000);
+    
     // Initialize rectangle ad
     setTimeout(() => {
         try {
