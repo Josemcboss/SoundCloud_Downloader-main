@@ -50,20 +50,17 @@
                             <label for="type" class="form-label">
                                 <i class="fas fa-music me-2"></i>Tipo de descarga
                             </label>
-                            <select class="form-select" id="type" onchange="togglePlaylistOptions()">
+<select class="form-select" id="type">
                                 <option value="single">🎵 Canción individual</option>
                                 <option value="playlist">📋 Playlist completa</option>
                             </select>
                         </div>
-                        <div class="col-md-6" id="playlistOptions" style="display: none;">
-                            <label for="zipOption" class="form-label">
-                                <i class="fas fa-archive me-2"></i>Formato de playlist
-                            </label>                            <select class="form-select" id="zipOption">
-                                <option value="separate">📁 Archivos separados</option>
-                                <option value="zip">📦 Comprimir en ZIP</option>
-                            </select>
-                            <div class="form-text text-muted mt-1">
-                                <small>El ZIP facilita la descarga de playlists grandes</small>
+                        <div class="col-md-6" id="playlistInfo" style="display: none;">
+                            <div class="alert alert-info-custom h-100 d-flex align-items-center">
+                                <div>
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <small>Las playlists se descargarán como un archivo ZIP.</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -179,7 +176,11 @@ document.getElementById('downloadForm').addEventListener('submit', async functio
     document.getElementById('progressArea').style.display = 'block';
     document.getElementById('progressArea').scrollIntoView({ behavior: 'smooth' });
     
-    try {        const response = await fetch('/download', {
+    // Determinar la opción de ZIP
+    const zipOption = (type === 'playlist') ? 'zip' : 'separate';
+
+    try {
+        const response = await fetch('/download', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -187,7 +188,7 @@ document.getElementById('downloadForm').addEventListener('submit', async functio
             body: JSON.stringify({
                 url: url,
                 type: type,
-                zipOption: document.getElementById('zipOption').value
+                zipOption: zipOption
             })
         });
         
@@ -382,29 +383,31 @@ document.getElementById('url').addEventListener('keypress', function(e) {
     }
 });
 
-// Auto-detectar tipo de contenido basado en URL
-document.getElementById('url').addEventListener('input', function() {
-    const url = this.value;
+// Auto-detectar tipo de contenido y mostrar info de playlist
+function updateDownloadType() {
+    const url = document.getElementById('url').value;
     const typeSelect = document.getElementById('type');
     
     if (url.includes('/sets/')) {
         typeSelect.value = 'playlist';
-        togglePlaylistOptions();
-    } else if (url.includes('soundcloud.com') && !url.includes('/sets/')) {
-        typeSelect.value = 'single';
-        togglePlaylistOptions();
     }
-});
 
-// Función para mostrar/ocultar opciones de playlist
-function togglePlaylistOptions() {
+    togglePlaylistInfo();
+}
+
+document.getElementById('url').addEventListener('input', updateDownloadType);
+document.getElementById('type').addEventListener('change', togglePlaylistInfo);
+
+
+// Función para mostrar/ocultar el mensaje informativo de playlists
+function togglePlaylistInfo() {
     const typeSelect = document.getElementById('type');
-    const playlistOptions = document.getElementById('playlistOptions');
+    const playlistInfo = document.getElementById('playlistInfo');
     
     if (typeSelect.value === 'playlist') {
-        playlistOptions.style.display = 'block';
+        playlistInfo.style.display = 'block';
     } else {
-        playlistOptions.style.display = 'none';
+        playlistInfo.style.display = 'none';
     }
 }
 

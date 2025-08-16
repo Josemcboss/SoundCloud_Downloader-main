@@ -9,6 +9,7 @@ from datetime import datetime
 import zipfile
 import shutil
 import yt_dlp
+import io
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_soundcloud_downloader_2024'
@@ -16,6 +17,7 @@ app.secret_key = 'tu_clave_secreta_soundcloud_downloader_2024'
 # Variables globales para el estado de descarga
 download_status = {}
 download_progress = {}
+download_results = {} # Para almacenar la ruta de los archivos descargados
 
 def zip_playlist_files(playlist_folder, zip_name):
     """Comprimir archivos de una carpeta en un ZIP y luego eliminar la carpeta."""
@@ -38,6 +40,8 @@ def zip_playlist_files(playlist_folder, zip_name):
 
 def descargar_contenido_async(url, tipo, download_id, zip_option=None):
     """Función para descargar en segundo plano usando yt-dlp."""
+    downloaded_files = [] # Para almacenar rutas de archivos
+
     def progress_hook(d):
         if d['status'] == 'downloading':
             total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
@@ -48,11 +52,16 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
                     "progress": progress
                 }
         elif d['status'] == 'finished':
+            # Cuando un archivo se completa, guardar su ruta
+            filepath = d.get('info_dict', {}).get('filepath')
+            if filepath:
+                downloaded_files.append(filepath)
             download_progress[download_id] = {"status": "Procesando...", "progress": 100}
 
     try:
         download_status[download_id] = "downloading"
         download_progress[download_id] = {"status": "Iniciando descarga...", "progress": 0}
+        download_results[download_id] = [] # Limpiar resultados previos
 
         # Limpiar URL
         url = url.strip().split('?')[0]
@@ -73,17 +82,19 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
             'no_warnings': True,
         }
 
+        playlist_folder = None
         # Opciones específicas para playlists
         if tipo == 'playlist':
-            # Usar un nombre de carpeta temporal para la playlist
             info = yt_dlp.YoutubeDL({'quiet': True, 'extract_flat': True}).extract_info(url, download=False)
             playlist_title = info.get('title', f'playlist_{download_id}')
-            # Sanitizar nombre de carpeta
             safe_playlist_title = "".join([c for c in playlist_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
-            playlist_folder = os.path.join('descargas', safe_playlist_title)
-            ydl_opts['outtmpl'] = {
-                'default': os.path.join(playlist_folder, '%(title)s.%(ext)s')
-            }
+
+            # Si se va a comprimir, descargar a una carpeta temporal
+            if zip_option == 'zip':
+                playlist_folder = os.path.join('descargas', safe_playlist_title)
+                ydl_opts['outtmpl'] = {
+                    'default': os.path.join(playlist_folder, '%(title)s.%(ext)s')
+                }
 
         # Iniciar descarga
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -95,6 +106,11 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
             zip_filename = zip_playlist_files(playlist_folder, safe_playlist_title)
             if not zip_filename:
                 raise Exception("Error al crear el archivo ZIP")
+            # Guardar la ruta del ZIP
+            download_results[download_id] = [os.path.join('descargas', zip_filename)]
+        else:
+            # Guardar las rutas de los archivos individuales
+            download_results[download_id] = downloaded_files
 
         download_status[download_id] = "completed"
         download_progress[download_id] = {"status": "¡Descarga completada!", "progress": 100}
@@ -102,6 +118,8 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
     except Exception as e:
         download_status[download_id] = "error"
         download_progress[download_id] = {"status": f"Error: {str(e)}", "progress": 0}
+        if download_id in download_results:
+            del download_results[download_id] # Limpiar en caso de error
 
 @app.route('/')
 def index():
@@ -195,40 +213,52 @@ def download_file(filename):
 
 @app.route('/auto_download/<download_id>')
 def auto_download(download_id):
-    """Iniciar descarga automática de archivos recién descargados"""
+    """Sirve el archivo o ZIP correcto para la descarga automática."""
     try:
-        downloads_dir = 'descargas'
-        # Buscar archivos creados en los últimos 5 minutos
-        recent_files = []
-        current_time = time.time()
-        
-        if os.path.exists(downloads_dir):
-            for filename in os.listdir(downloads_dir):
-                if filename.endswith(('.mp3', '.flac', '.wav', '.m4a', '.zip')):
-                    filepath = os.path.join(downloads_dir, filename)
-                    if os.path.isfile(filepath):
-                        file_time = os.path.getmtime(filepath)
-                        # Si el archivo fue creado en los últimos 5 minutos
-                        if current_time - file_time < 300:  # 5 minutos
-                            recent_files.append(filename)
-        
-        if recent_files:
-            # Si hay un solo archivo, descargarlo directamente
-            if len(recent_files) == 1:
-                filepath = os.path.join(downloads_dir, recent_files[0])
-                return send_file(filepath, as_attachment=True, download_name=recent_files[0])
+        # Obtener la lista de archivos del diccionario de resultados
+        file_paths = download_results.get(download_id)
+
+        if not file_paths:
+            return jsonify({'error': 'ID de descarga no válido o expirado'}), 404
+
+        # Si solo hay un archivo (canción única o playlist ya comprimida)
+        if len(file_paths) == 1:
+            filepath = file_paths[0]
+            if os.path.exists(filepath):
+                return send_file(filepath, as_attachment=True, download_name=os.path.basename(filepath))
             else:
-                # Si hay múltiples archivos, retornar lista para que el usuario elija
-                return jsonify({
-                    'success': True,
-                    'files': recent_files,
-                    'message': f'Se encontraron {len(recent_files)} archivos recientes'
-                })
-        else:
-            return jsonify({'success': False, 'message': 'No se encontraron archivos recientes'})
+                return jsonify({'error': 'Archivo no encontrado en el servidor'}), 404
+
+        # Si hay múltiples archivos, crear un ZIP al vuelo
+        # Si hay múltiples archivos, crear un ZIP al vuelo en memoria
+        elif len(file_paths) > 1:
+            memory_file = io.BytesIO()
+            zip_name = "playlist.zip" # Nombre genérico
+
+            with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for fpath in file_paths:
+                    if os.path.exists(fpath):
+                        zipf.write(fpath, os.path.basename(fpath))
             
+            memory_file.seek(0)
+
+            # Enviar el ZIP desde la memoria
+            return send_file(
+                memory_file,
+                as_attachment=True,
+                download_name=zip_name,
+                mimetype='application/zip'
+            )
+
+        else: # Si la lista está vacía
+            return jsonify({'error': 'No se encontraron archivos para esta descarga'}), 404
+
     except Exception as e:
         return jsonify({'error': f'Error en descarga automática: {str(e)}'}), 500
+    finally:
+        # Limpiar el resultado para que no se pueda volver a descargar
+        if download_id in download_results:
+            del download_results[download_id]
 
 
 if __name__ == '__main__':
