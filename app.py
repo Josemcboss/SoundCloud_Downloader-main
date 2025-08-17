@@ -20,6 +20,17 @@ download_progress = {}
 download_results = {} # Para almacenar la ruta de los archivos descargados
 download_timestamps = {} # Para rastrear cuándo se crearon las descargas
 
+def check_ffmpeg_availability():
+    """Verificar si FFmpeg está disponible en el sistema"""
+    try:
+        subprocess.run(['ffmpeg', '-version'], 
+                      stdout=subprocess.DEVNULL, 
+                      stderr=subprocess.DEVNULL, 
+                      check=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
 def cleanup_old_downloads():
     """Limpiar descargas antiguas (más de 10 minutos)"""
     current_time = datetime.now()
@@ -107,13 +118,12 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
         # Limpiar URL
         url = url.strip().split('?')[0]
 
+        # Verificar si FFmpeg está disponible
+        ffmpeg_available = check_ffmpeg_availability()
+        
         # Opciones base para yt-dlp
         ydl_opts = {
             'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'flac',
-            }],
             'outtmpl': {
                 'default': os.path.join('descargas', '%(title)s.%(ext)s')
             },
@@ -122,6 +132,16 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
             'quiet': True,
             'no_warnings': True,
         }
+        
+        # Solo agregar postprocessors si FFmpeg está disponible
+        if ffmpeg_available:
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'flac',
+            }]
+        else:
+            # Sin FFmpeg, descargar el mejor formato disponible (generalmente MP3)
+            ydl_opts['format'] = 'bestaudio[ext=mp3]/bestaudio/best'
 
         playlist_folder = None
         # Opciones específicas para playlists
@@ -181,13 +201,15 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
         download_status[download_id] = "completed"
         
         # Mensaje personalizado según el tipo de descarga
+        format_info = "FLAC" if ffmpeg_available else "MP3"
+        
         if tipo == 'playlist':
             if zip_option == 'zip':
-                status_message = "¡Playlist comprimida en ZIP y lista para descarga automática!"
+                status_message = f"¡Playlist en {format_info} comprimida en ZIP y lista para descarga automática!"
             else:
-                status_message = f"¡{len(downloaded_files)} canciones listas para descarga automática individual!"
+                status_message = f"¡{len(downloaded_files)} canciones en {format_info} listas para descarga automática individual!"
         else:
-            status_message = "¡Canción lista para descarga automática!"
+            status_message = f"¡Canción en {format_info} lista para descarga automática!"
             
         download_progress[download_id] = {"status": status_message, "progress": 100}
 
@@ -200,8 +222,9 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
 @app.route('/')
 def index():
     """Página principal"""
-    # Ya no se verifican dependencias locales
-    return render_template('index.html', scdl_installed=True, ffmpeg_installed=True)
+    # Verificar si FFmpeg está disponible
+    ffmpeg_available = check_ffmpeg_availability()
+    return render_template('index.html', scdl_installed=True, ffmpeg_installed=ffmpeg_available)
 
 @app.route('/download', methods=['POST'])
 def download():

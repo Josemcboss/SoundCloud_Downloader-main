@@ -11,13 +11,14 @@
                         <i class="fab fa-soundcloud text-primary"></i> SoundCloud Downloader
                     </h1>
                     <p class="lead text-muted">Descarga canciones y playlists de SoundCloud en alta calidad</p>
-                </div>                <!-- Estado del sistema -->
+                </div> <!-- Estado del sistema -->
                 <div class="alert alert-info-custom mb-4">
                     <h6 class="mb-3"><i class="fas fa-info-circle me-2"></i>Estado del sistema</h6>
                     <div class="row text-center">
                         <div class="col-6">
                             <div class="d-flex align-items-center justify-content-center">
-                                <span class="status-indicator {% if scdl_installed %}status-ok{% else %}status-error{% endif %}"></span>
+                                <span
+                                    class="status-indicator {% if scdl_installed %}status-ok{% else %}status-error{% endif %}"></span>
                                 <small class="fw-semibold">
                                     SCDL: {% if scdl_installed %}✓ Instalado{% else %}✗ No instalado{% endif %}
                                 </small>
@@ -25,13 +26,26 @@
                         </div>
                         <div class="col-6">
                             <div class="d-flex align-items-center justify-content-center">
-                                <span class="status-indicator {% if ffmpeg_installed %}status-ok{% else %}status-error{% endif %}"></span>
+                                <span
+                                    class="status-indicator {% if ffmpeg_installed %}status-ok{% else %}status-warning{% endif %}"></span>
                                 <small class="fw-semibold">
-                                    FFmpeg: {% if ffmpeg_installed %}✓ FLAC{% else %}✗ Solo MP3{% endif %}
+                                    FFmpeg: {% if ffmpeg_installed %}✓ FLAC disponible{% else %}⚠ Solo MP3{% endif %}
                                 </small>
                             </div>
                         </div>
                     </div>
+                    {% if not ffmpeg_installed %}
+                    <div class="mt-3 p-3"
+                        style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 8px;">
+                        <small class="text-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>FFmpeg no detectado:</strong> Las descargas funcionarán en formato MP3.
+                            Para obtener calidad FLAC, instala FFmpeg desde
+                            <a href="https://ffmpeg.org/download.html" target="_blank" class="text-warning"
+                                style="text-decoration: underline;">ffmpeg.org</a>
+                        </small>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Formulario de descarga -->
@@ -40,12 +54,14 @@
                         <label for="url" class="form-label">
                             <i class="fas fa-link me-2"></i>URL de SoundCloud
                         </label>
-                        <input type="url" class="form-control form-control-lg" id="url" 
-                               placeholder="https://soundcloud.com/usuario/cancion" required>
+                        <input type="url" class="form-control form-control-lg" id="url"
+                            placeholder="https://soundcloud.com/usuario/cancion" required>
                         <div class="form-text text-muted mt-2">
-                            <small><i class="fas fa-lightbulb me-1"></i>Pega aquí el enlace de la canción o playlist</small>
+                            <small><i class="fas fa-lightbulb me-1"></i>Pega aquí el enlace de la canción o
+                                playlist</small>
                         </div>
-                    </div>                    <div class="row mb-4">
+                    </div>
+                    <div class="row mb-4">
                         <div class="col-md-6 mb-3 mb-md-0">
                             <label for="type" class="form-label">
                                 <i class="fas fa-music me-2"></i>Tipo de descarga
@@ -60,7 +76,8 @@
                                 <i class="fas fa-cog me-2"></i>Modo de playlist
                             </label>
                             <select class="form-select" id="playlistMode">
-                                <option value="individual">📁 Archivos individuales - Descarga automática separada</option>
+                                <option value="individual">📁 Archivos individuales - Descarga automática separada
+                                </option>
                                 <option value="zip">📦 Archivo ZIP - Descarga automática comprimida</option>
                             </select>
                             <div class="form-text text-muted mt-1">
@@ -80,19 +97,22 @@
                                 <i class="fas fa-download me-2"></i>Descarga automática habilitada
                             </label>
                             <div class="form-text text-muted mt-1">
-                                <small id="autoDownloadInfo">Los archivos se descargarán automáticamente a tu dispositivo</small>
+                                <small id="autoDownloadInfo">Los archivos se descargarán automáticamente a tu
+                                    dispositivo</small>
                             </div>
                         </div>
-                        
+
                         <div id="autoDownloadOptions" class="ms-4">
                             <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="downloadTiming" id="downloadImmediate" value="immediate" checked>
+                                <input class="form-check-input" type="radio" name="downloadTiming"
+                                    id="downloadImmediate" value="immediate" checked>
                                 <label class="form-check-label" for="downloadImmediate">
                                     <i class="fas fa-bolt me-1"></i>Descargar cada canción al completarse
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="downloadTiming" id="downloadAtEnd" value="at_end">
+                                <input class="form-check-input" type="radio" name="downloadTiming" id="downloadAtEnd"
+                                    value="at_end">
                                 <label class="form-check-label" for="downloadAtEnd">
                                     <i class="fas fa-clock me-1"></i>Descargar todas al finalizar
                                 </label>
@@ -116,11 +136,11 @@
                                 <h6 class="mb-0 text-white">Estado de descarga</h6>
                             </div>
                             <div class="progress progress-custom mb-3">
-                                <div id="progressBar" class="progress-bar progress-bar-custom" 
-                                     role="progressbar" style="width: 0%"></div>
+                                <div id="progressBar" class="progress-bar progress-bar-custom" role="progressbar"
+                                    style="width: 0%"></div>
                             </div>
                             <small id="statusText" class="text-white-75">Preparando descarga...</small>
-                            
+
                             <!-- Lista de archivos descargados (para playlists) -->
                             <div id="downloadedFilesList" class="mt-3" style="display: none;">
                                 <h6 class="text-white mb-2">
@@ -144,552 +164,627 @@
                             <i class="fas fa-sync-alt me-2"></i>Actualizar
                         </button>
                     </div>
-                    
-                    <div id="downloadedFilesContainer">
-                        <!-- Los archivos descargados se cargarán aquí dinámicamente -->
-                        <div class="empty-state text-center py-4">
-                            <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
-                            <h5 class="text-muted mb-2">No hay archivos descargados</h5>
-                            <p class="text-muted">Las canciones y playlists que descargues aparecerán aquí</p>
-                        </div>
-                    </div>
-                </div>                <!-- Información adicional -->
-                <div class="row mt-4 text-center">
-                    <div class="col-md-4 mb-3">
-                        <div class="text-primary mb-2">
-                            <i class="fas fa-music fa-2x"></i>
-                        </div>
-                        <h6 class="fw-semibold">Alta Calidad</h6>
-                        <small class="text-muted">FLAC o MP3 según disponibilidad</small>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="text-success mb-2">
-                            <i class="fas fa-bolt fa-2x"></i>
-                        </div>
-                        <h6 class="fw-semibold">Rápido</h6>
-                        <small class="text-muted">Descarga directa sin esperas</small>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="text-info mb-2">
-                            <i class="fas fa-mobile-alt fa-2x"></i>
-                        </div>
-                        <h6 class="fw-semibold">Responsivo</h6>
-                        <small class="text-muted">Funciona en móvil y PC</small>
+
+                    <div id="downloadedFilesContainer" style="height: auto; max-height: none; overflow: visible;"></div>
+                    <!-- Los archivos descargados se cargarán aquí dinámicamente -->
+                    <div class="empty-state text-center py-4">
+                        <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
+                        <h5 class="text-muted mb-2">No hay archivos descargados</h5>
+                        <p class="text-muted">Las canciones y playlists que descargues aparecerán aquí</p>
                     </div>
                 </div>
-
-                <!-- Middle Rectangle Ad -->
-                <div class="ad-container mt-4">
-                    <div class="ad-label">Publicidad</div>
-                    <div class="ad-rectangle">                        <!-- AdSense Rectangle Ad -->
-                        <ins class="adsbygoogle"
-                             style="display:block"
-                             data-ad-client="ca-pub-8572512148825737"
-                             data-ad-slot="XXXXXXXXXX"
-                             data-ad-format="rectangle"></ins>
+            </div> <!-- Información adicional -->
+            <div class="row mt-4 text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-music fa-2x"></i>
                     </div>
+                    <h6 class="fw-semibold">Alta Calidad</h6>
+                    <small class="text-muted">FLAC o MP3 según disponibilidad</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-bolt fa-2x"></i>
+                    </div>
+                    <h6 class="fw-semibold">Rápido</h6>
+                    <small class="text-muted">Descarga directa sin esperas</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-mobile-alt fa-2x"></i>
+                    </div>
+                    <h6 class="fw-semibold">Responsivo</h6>
+                    <small class="text-muted">Funciona en móvil y PC</small>
+                </div>
+            </div>
+
+            <!-- Middle Rectangle Ad -->
+            <div class="ad-container mt-4">
+                <div class="ad-label">Publicidad</div>
+                <div class="ad-rectangle"> <!-- AdSense Rectangle Ad -->
+                    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-8572512148825737"
+                        data-ad-slot="XXXXXXXXXX" data-ad-format="rectangle"></ins>
                 </div>
             </div>
         </div>
     </div>
 </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <style>
-/* Estilos para la lista de archivos descargados */
-#downloadedFilesList .list-group-item {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.9);
-    padding: 8px 12px;
-    margin-bottom: 4px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-#downloadedFilesList .list-group-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(5px);
-}
-
-#downloadedFilesList .list-group-item i {
-    color: var(--success-color);
-}
-
-[data-theme="dark"] #downloadedFilesList .list-group-item {
-    background: rgba(17, 24, 39, 0.6);
-    border-color: rgba(248, 250, 252, 0.2);
-    color: rgba(248, 250, 252, 0.9);
-}
-
-[data-theme="dark"] #downloadedFilesList .list-group-item:hover {
-    background: rgba(17, 24, 39, 0.8);
-}
-
-/* Animación para el botón de descarga manual */
-.pulse-animation {
-    animation: pulse-glow 2s infinite;
-}
-
-@keyframes pulse-glow {
-    0% {
-        box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    /* Estilos para la lista de archivos descargados */
+    #downloadedFilesList .list-group-item {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        margin-bottom: 4px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
     }
-    50% {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.6);
-        transform: scale(1.02);
+
+    #downloadedFilesList .list-group-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateX(5px);
     }
-    100% {
-        box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+
+    #downloadedFilesList .list-group-item i {
+        color: var(--success-color);
     }
-}
 
-/* Estilos para la sección de descargas integrada */
-#downloadsSection {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 2rem;
-    margin-top: 2rem;
-}
-
-[data-theme="dark"] #downloadsSection {
-    background: rgba(17, 24, 39, 0.3);
-    border-color: rgba(248, 250, 252, 0.1);
-}
-
-#downloadsSection h3 {
-    color: white;
-}
-
-[data-theme="dark"] #downloadsSection h3 {
-    color: var(--text-primary);
-}
-
-/* Estilos específicos para la tabla de archivos descargados */
-#downloadsSection .table-custom {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-[data-theme="dark"] #downloadsSection .table-custom {
-    background: rgba(248, 250, 252, 0.05);
-}
-
-#downloadsSection .table-custom th {
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: white !important;
-    font-weight: 600;
-    padding: 16px;
-}
-
-[data-theme="dark"] #downloadsSection .table-custom th {
-    background: rgba(248, 250, 252, 0.1);
-    color: var(--text-primary) !important;
-}
-
-#downloadsSection .table-custom td {
-    border: none;
-    padding: 16px;
-    vertical-align: middle;
-}
-
-/* Nombres de archivos - texto más visible */
-#downloadsSection .fw-semibold {
-    color: white !important;
-    font-weight: 600 !important;
-}
-
-[data-theme="dark"] #downloadsSection .fw-semibold {
-    color: var(--text-primary) !important;
-}
-
-/* Información secundaria */
-#downloadsSection .text-muted {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-[data-theme="dark"] #downloadsSection .text-muted {
-    color: rgba(248, 250, 252, 0.7) !important;
-}
-
-/* Badges de tamaño */
-.file-size-badge {
-    background: rgba(255, 255, 255, 0.25) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    font-weight: 600 !important;
-}
-
-[data-theme="dark"] .file-size-badge {
-    background: rgba(248, 250, 252, 0.2) !important;
-    color: #f8fafc !important;
-    border: 1px solid rgba(248, 250, 252, 0.3) !important;
-}
-
-/* Filas de la tabla */
-#downloadsSection .table-custom tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    transition: background 0.3s ease;
-}
-
-[data-theme="dark"] #downloadsSection .table-custom tbody tr {
-    border-bottom: 1px solid rgba(248, 250, 252, 0.1);
-}
-
-#downloadsSection .table-custom tbody tr:hover {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] #downloadsSection .table-custom tbody tr:hover {
-    background: rgba(248, 250, 252, 0.08);
-}
-
-/* Clases específicas para nombres de archivos */
-.file-name-text {
-    color: white !important;
-    font-weight: 700 !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-[data-theme="dark"] .file-name-text {
-    color: #f8fafc !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.file-info-text {
-    color: rgba(255, 255, 255, 0.8) !important;
-}
-
-[data-theme="dark"] .file-info-text {
-    color: rgba(248, 250, 252, 0.8) !important;
-}
-
-.file-date-text {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-weight: 500 !important;
-}
-
-[data-theme="dark"] .file-date-text {
-    color: rgba(248, 250, 252, 0.9) !important;
-}
-
-/* Mejorar contraste general en la sección de descargas */
-#downloadsSection .small {
-    color: rgba(255, 255, 255, 0.9) !important;
-}
-
-[data-theme="dark"] #downloadsSection .small {
-    color: rgba(248, 250, 252, 0.9) !important;
-}
-
-/* Animación de entrada para archivos */
-.file-entry {
-    animation: slideInUp 0.3s ease-out;
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    [data-theme="dark"] #downloadedFilesList .list-group-item {
+        background: rgba(17, 24, 39, 0.6);
+        border-color: rgba(248, 250, 252, 0.2);
+        color: rgba(248, 250, 252, 0.9);
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    [data-theme="dark"] #downloadedFilesList .list-group-item:hover {
+        background: rgba(17, 24, 39, 0.8);
     }
-}
+
+    /* Animación para el botón de descarga manual */
+    .pulse-animation {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0% {
+            box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+        }
+
+        50% {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 30px rgba(16, 185, 129, 0.6);
+            transform: scale(1.02);
+        }
+
+        100% {
+            box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+        }
+    }
+
+    /* Estilos para la sección de descargas integrada */
+    #downloadsSection {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        min-height: auto;
+        height: auto;
+    }
+
+    [data-theme="dark"] #downloadsSection {
+        background: rgba(17, 24, 39, 0.3);
+        border-color: rgba(248, 250, 252, 0.1);
+    }
+
+    #downloadsSection h3 {
+        color: white;
+    }
+
+    [data-theme="dark"] #downloadsSection h3 {
+        color: var(--text-primary);
+    }
+
+    /* Estilos específicos para la tabla de archivos descargados */
+    #downloadsSection .table-custom {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        overflow: visible;
+        height: auto;
+        max-height: none;
+    }
+
+    [data-theme="dark"] #downloadsSection .table-custom {
+        background: rgba(248, 250, 252, 0.05);
+    }
+
+    #downloadsSection .table-custom th {
+        background: rgba(255, 255, 255, 0.3);
+        border: none;
+        color: #000000 !important;
+        font-weight: 600;
+        padding: 16px;
+    }
+
+    [data-theme="dark"] #downloadsSection .table-custom th {
+        background: rgba(255, 255, 255, 0.3);
+        color: #000000 !important;
+    }
+
+    #downloadsSection .table-custom td {
+        border: none;
+        padding: 16px;
+        vertical-align: middle;
+    }
+
+    /* Nombres de archivos - texto más visible */
+    #downloadsSection .fw-semibold {
+        color: white !important;
+        font-weight: 600 !important;
+    }
+
+    [data-theme="dark"] #downloadsSection .fw-semibold {
+        color: var(--text-primary) !important;
+    }
+
+    /* Información secundaria */
+    #downloadsSection .text-muted {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    [data-theme="dark"] #downloadsSection .text-muted {
+        color: rgba(248, 250, 252, 0.7) !important;
+    }
+
+    /* Badges de tamaño */
+    .file-size-badge {
+        background: rgba(255, 255, 255, 0.8) !important;
+        color: #000000 !important;
+        border: 1px solid rgba(0, 0, 0, 0.2) !important;
+        font-weight: 600 !important;
+    }
+
+    [data-theme="dark"] .file-size-badge {
+        background: rgba(255, 255, 255, 0.8) !important;
+        color: #000000 !important;
+        border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Filas de la tabla */
+    #downloadsSection .table-custom tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: background 0.3s ease;
+    }
+
+    [data-theme="dark"] #downloadsSection .table-custom tbody tr {
+        border-bottom: 1px solid rgba(248, 250, 252, 0.1);
+    }
+
+    #downloadsSection .table-custom tbody tr:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-theme="dark"] #downloadsSection .table-custom tbody tr:hover {
+        background: rgba(248, 250, 252, 0.08);
+    }
+
+    /* Clases específicas para nombres de archivos - TEXTO NEGRO */
+    #downloadsSection .file-name-text,
+    #downloadsSection .fw-semibold,
+    #downloadsSection td .fw-semibold {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] #downloadsSection .file-name-text,
+    [data-theme="dark"] #downloadsSection .fw-semibold,
+    [data-theme="dark"] #downloadsSection td .fw-semibold {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8) !important;
+    }
+
+    .file-info-text {
+        color: rgba(0, 0, 0, 0.8) !important;
+    }
+
+    [data-theme="dark"] .file-info-text {
+        color: rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .file-date-text {
+        color: rgba(0, 0, 0, 0.9) !important;
+        font-weight: 500 !important;
+    }
+
+    [data-theme="dark"] .file-date-text {
+        color: rgba(0, 0, 0, 0.9) !important;
+    }
+
+    /* Mejorar contraste general en la sección de descargas */
+    #downloadsSection .small {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    [data-theme="dark"] #downloadsSection .small {
+        color: rgba(248, 250, 252, 0.9) !important;
+    }
+
+    /* FORZAR VISIBILIDAD MÁXIMA - TEXTO NEGRO */
+    #downloadsSection table td,
+    #downloadsSection table td *,
+    #downloadsSection .table-custom td,
+    #downloadsSection .table-custom td * {
+        color: #000000 !important;
+    }
+
+    #downloadsSection .text-muted {
+        color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    /* Específicamente para los nombres de archivos */
+    #downloadsSection tbody td:first-child div div:first-child {
+        color: #000000 !important;
+        font-weight: 800 !important;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8) !important;
+    }
+
+    /* Eliminar scroll y expandir tabla completamente */
+    #downloadsSection .table-responsive {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        -webkit-overflow-scrolling: auto !important;
+    }
+
+    #downloadsSection .table-responsive table {
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    /* Asegurar que el contenedor de archivos se expanda */
+    #downloadedFilesContainer {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* Eliminar cualquier restricción de altura en elementos padre */
+    .card-white,
+    .card-body {
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    /* Asegurar que no haya scroll interno */
+    #downloadsSection * {
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+    }
+
+    /* Específicamente para tablas grandes */
+    #downloadsSection tbody {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* Animación de entrada para archivos */
+    .file-entry {
+        animation: slideInUp 0.3s ease-out;
+    }
+
+    /* Indicador de warning para FFmpeg */
+    .status-warning {
+        background: #f59e0b;
+        border-color: #f59e0b;
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 <script>
-// Variables globales
-let currentDownloadId = null;
-let progressInterval = null;
-let downloadedFiles = [];
-let isPlaylist = false;
-let refreshInterval = null;
+    // Variables globales
+    let currentDownloadId = null;
+    let progressInterval = null;
+    let downloadedFiles = [];
+    let isPlaylist = false;
+    let refreshInterval = null;
 
-// Form submission
-document.getElementById('downloadForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const url = document.getElementById('url').value.trim();
-    const type = document.getElementById('type').value;
-    
-    // Validaciones básicas
-    if (!url) {
-        showAlert('Por favor, ingresa una URL', 'error');
-        return;
-    }
-    
-    if (!url.includes('soundcloud.com')) {
-        showAlert('Por favor, ingresa una URL válida de SoundCloud', 'error');
-        return;
-    }
-    
-    // Deshabilitar botón y mostrar loading
-    const downloadBtn = document.getElementById('downloadBtn');
-    const originalBtnText = downloadBtn.innerHTML;
-    downloadBtn.disabled = true;
-    downloadBtn.innerHTML = '<div class="spinner-custom me-2"></div>Iniciando...';
-    
-    // Mostrar área de progreso
-    document.getElementById('progressArea').style.display = 'block';
-    document.getElementById('progressArea').scrollIntoView({ behavior: 'smooth' });
-    
-    // Determinar la opción de descarga para playlists
-    let zipOption = 'separate';
-    if (type === 'playlist') {
-        const playlistMode = document.getElementById('playlistMode').value;
-        zipOption = playlistMode === 'zip' ? 'zip' : 'separate';
-    }
+    // Form submission
+    document.getElementById('downloadForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    try {
-        const response = await fetch('/download', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                url: url,
-                type: type,
-                zipOption: zipOption
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            currentDownloadId = result.download_id;
-            isPlaylist = (type === 'playlist');
-            downloadedFiles = [];
-            monitorProgress(result.download_id);
-        } else {
-            showAlert(result.message, 'error');
+        const url = document.getElementById('url').value.trim();
+        const type = document.getElementById('type').value;
+
+        // Validaciones básicas
+        if (!url) {
+            showAlert('Por favor, ingresa una URL', 'error');
+            return;
+        }
+
+        if (!url.includes('soundcloud.com')) {
+            showAlert('Por favor, ingresa una URL válida de SoundCloud', 'error');
+            return;
+        }
+
+        // Deshabilitar botón y mostrar loading
+        const downloadBtn = document.getElementById('downloadBtn');
+        const originalBtnText = downloadBtn.innerHTML;
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '<div class="spinner-custom me-2"></div>Iniciando...';
+
+        // Mostrar área de progreso
+        document.getElementById('progressArea').style.display = 'block';
+        document.getElementById('progressArea').scrollIntoView({ behavior: 'smooth' });
+
+        // Determinar la opción de descarga para playlists
+        let zipOption = 'separate';
+        if (type === 'playlist') {
+            const playlistMode = document.getElementById('playlistMode').value;
+            zipOption = playlistMode === 'zip' ? 'zip' : 'separate';
+        }
+
+        try {
+            const response = await fetch('/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: url,
+                    type: type,
+                    zipOption: zipOption
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                currentDownloadId = result.download_id;
+                isPlaylist = (type === 'playlist');
+                downloadedFiles = [];
+                monitorProgress(result.download_id);
+            } else {
+                showAlert(result.message, 'error');
+                hideProgressArea();
+                resetDownloadButton(downloadBtn, originalBtnText);
+            }
+
+        } catch (error) {
+            showAlert('Error de conexión: ' + error.message, 'error');
             hideProgressArea();
             resetDownloadButton(downloadBtn, originalBtnText);
         }
-        
-    } catch (error) {
-        showAlert('Error de conexión: ' + error.message, 'error');
-        hideProgressArea();
-        resetDownloadButton(downloadBtn, originalBtnText);
-    }
-});
+    });
 
-// Monitorear progreso de descarga
-function monitorProgress(downloadId) {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-    }
-    
-    progressInterval = setInterval(async () => {
-        try {
-            const response = await fetch(`/status/${downloadId}`);
-            const data = await response.json();
-            
-            // Actualizar UI
-            updateProgressUI(data.progress.progress, data.progress.status);
-            
-            // Para playlists con descarga inmediata, verificar si hay nuevos archivos
-            if (isPlaylist && document.getElementById('autoDownload').checked && 
-                document.querySelector('input[name="downloadTiming"]:checked').value === 'immediate') {
-                checkForNewFiles(downloadId);
-            }
-            
-            if (data.status === 'completed') {
-                handleDownloadComplete();
-            } else if (data.status === 'error') {
-                handleDownloadError(data.progress.status);
-            }
-            
-        } catch (error) {
-            console.error('Error checking status:', error);
-            handleDownloadError('Error al verificar el estado de descarga');
+    // Monitorear progreso de descarga
+    function monitorProgress(downloadId) {
+        if (progressInterval) {
+            clearInterval(progressInterval);
         }
-    }, 2000);
-}
 
-// Verificar si hay nuevos archivos listos para descarga individual
-async function checkForNewFiles(downloadId) {
-    try {
-        // Esta función podría expandirse para descargar archivos individuales
-        // tan pronto como estén listos, en lugar de esperar a que termine toda la playlist
-        
-        // Por ahora, mantenemos el comportamiento actual pero con mejor feedback
-        const statusText = document.getElementById('statusText').textContent;
-        if (statusText.includes('Completada canción')) {
-            const match = statusText.match(/Completada canción (\d+)\/(\d+)/);
-            if (match) {
-                const completed = parseInt(match[1]);
-                const total = parseInt(match[2]);
-                
-                // Mostrar progreso más detallado
-                showAlert(`Canción ${completed}/${total} completada`, 'success');
-            }
-        }
-    } catch (error) {
-        console.error('Error checking for new files:', error);
-    }
-}
-
-// Actualizar UI de progreso
-function updateProgressUI(progress, status) {
-    const progressBar = document.getElementById('progressBar');
-    const statusText = document.getElementById('statusText');
-    
-    progressBar.style.width = progress + '%';
-    statusText.textContent = status;
-}
-
-// Manejar descarga completada
-function handleDownloadComplete() {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-        progressInterval = null;
-    }
-    
-    const progressBar = document.getElementById('progressBar');
-    progressBar.classList.remove('progress-bar-custom');
-    progressBar.classList.add('bg-success');
-    
-    // Verificar si descarga automática está habilitada
-    const autoDownload = document.getElementById('autoDownload').checked;
-    if (autoDownload && currentDownloadId) {
-        const downloadTiming = document.querySelector('input[name="downloadTiming"]:checked').value;
-        const playlistMode = document.getElementById('playlistMode').value;
-        const isPlaylistType = document.getElementById('type').value === 'playlist';
-        
-        // Mensaje personalizado según el tipo de descarga
-        let completionMessage = '¡Descarga completada exitosamente!';
-        if (isPlaylistType) {
-            if (playlistMode === 'zip') {
-                completionMessage = '¡Playlist comprimida en ZIP y lista para descarga automática!';
-            } else {
-                completionMessage = '¡Todas las canciones listas para descarga automática individual!';
-            }
-        } else {
-            completionMessage = '¡Canción lista para descarga automática!';
-        }
-        
-        showAlert(completionMessage, 'success');
-        
-        if (downloadTiming === 'immediate') {
-            // Para descargas inmediatas, iniciar descarga automática
-            setTimeout(() => {
-                initiateAutoDownload(currentDownloadId);
-            }, 1000);
-        } else {
-            // Para descargas al final, mostrar botón manual
-            showManualDownloadOption();
-        }
-    } else {
-        showAlert('¡Descarga completada! Los archivos aparecen en la lista de abajo.', 'success');
-    }
-    
-    setTimeout(() => {
-        hideProgressArea();
-        resetForm();
-        // Actualizar la lista de archivos descargados
-        loadDownloadedFiles();
-    }, 5000);
-}
-
-// Función para iniciar descarga automática
-async function initiateAutoDownload(downloadId) {
-    try {
-        const isPlaylistType = document.getElementById('type').value === 'playlist';
-        const playlistMode = document.getElementById('playlistMode').value;
-        
-        // Mensaje personalizado según el tipo de descarga
-        let downloadMessage = 'Iniciando descarga automática...';
-        if (isPlaylistType) {
-            if (playlistMode === 'zip') {
-                downloadMessage = 'Descargando automáticamente el archivo ZIP con todas las canciones...';
-            } else {
-                downloadMessage = 'Verificando archivos para descarga individual...';
-            }
-        } else {
-            downloadMessage = 'Descargando automáticamente la canción...';
-        }
-        
-        showAlert(downloadMessage, 'success');
-        
-        // Para playlists con modo individual, verificar si hay múltiples archivos
-        if (isPlaylistType && playlistMode === 'individual') {
+        progressInterval = setInterval(async () => {
             try {
-                const filesResponse = await fetch(`/get_download_files/${downloadId}`);
-                const filesData = await filesResponse.json();
-                
-                if (filesData.success && filesData.files && filesData.files.length > 1) {
-                    // Múltiples archivos - descargar individualmente
-                    showAlert(`${filesData.files.length} canciones listas. Descargando individualmente...`, 'success');
-                    
-                    for (let i = 0; i < filesData.files.length; i++) {
-                        setTimeout(() => {
-                            autoDownloadFile(filesData.files[i]);
-                            // Actualizar la lista después de la última descarga
-                            if (i === filesData.files.length - 1) {
-                                setTimeout(() => {
-                                    loadDownloadedFiles();
-                                }, 2000);
-                            }
-                        }, i * 1500); // 1.5 segundos de delay entre descargas
-                    }
-                    return;
-                }
-            } catch (error) {
-                console.log('No se pudieron obtener archivos individuales, usando descarga estándar');
-            }
-        }
-        
-        // Descarga estándar (archivo único o ZIP)
-        const autoDownloadUrl = `/auto_download/${downloadId}`;
-        const tempLink = document.createElement('a');
-        tempLink.href = autoDownloadUrl;
-        tempLink.style.display = 'none';
-        
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-        
-    } catch (error) {
-        console.error('Error en descarga automática:', error);
-        showAlert('Error en descarga automática. Los archivos están disponibles en la lista de abajo.', 'error');
-    }
-}
+                const response = await fetch(`/status/${downloadId}`);
+                const data = await response.json();
 
-// Función para mostrar opción de descarga manual
-function showManualDownloadOption() {
-    const progressArea = document.getElementById('progressArea');
-    const cardBody = progressArea.querySelector('.card-body');
-    const isPlaylistType = document.getElementById('type').value === 'playlist';
-    const playlistMode = document.getElementById('playlistMode').value;
-    
-    // Texto del botón según el tipo de descarga
-    let buttonText = 'Descargar Archivos';
-    let buttonIcon = 'fas fa-download';
-    
-    if (isPlaylistType) {
-        if (playlistMode === 'zip') {
-            buttonText = 'Descargar ZIP Automáticamente';
-            buttonIcon = 'fas fa-file-archive';
-        } else {
-            buttonText = 'Descargar Canciones Individuales';
-            buttonIcon = 'fas fa-music';
-        }
-    } else {
-        buttonText = 'Descargar Canción';
-        buttonIcon = 'fas fa-download';
+                // Actualizar UI
+                updateProgressUI(data.progress.progress, data.progress.status);
+
+                // Para playlists con descarga inmediata, verificar si hay nuevos archivos
+                if (isPlaylist && document.getElementById('autoDownload').checked &&
+                    document.querySelector('input[name="downloadTiming"]:checked').value === 'immediate') {
+                    checkForNewFiles(downloadId);
+                }
+
+                if (data.status === 'completed') {
+                    handleDownloadComplete();
+                } else if (data.status === 'error') {
+                    handleDownloadError(data.progress.status);
+                }
+
+            } catch (error) {
+                console.error('Error checking status:', error);
+                handleDownloadError('Error al verificar el estado de descarga');
+            }
+        }, 2000);
     }
-    
-    // Agregar botón de descarga manual
-    const downloadButton = document.createElement('div');
-    downloadButton.className = 'mt-3 text-center';
-    downloadButton.innerHTML = `
+
+    // Verificar si hay nuevos archivos listos para descarga individual
+    async function checkForNewFiles(downloadId) {
+        try {
+            // Esta función podría expandirse para descargar archivos individuales
+            // tan pronto como estén listos, en lugar de esperar a que termine toda la playlist
+
+            // Por ahora, mantenemos el comportamiento actual pero con mejor feedback
+            const statusText = document.getElementById('statusText').textContent;
+            if (statusText.includes('Completada canción')) {
+                const match = statusText.match(/Completada canción (\d+)\/(\d+)/);
+                if (match) {
+                    const completed = parseInt(match[1]);
+                    const total = parseInt(match[2]);
+
+                    // Mostrar progreso más detallado
+                    showAlert(`Canción ${completed}/${total} completada`, 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for new files:', error);
+        }
+    }
+
+    // Actualizar UI de progreso
+    function updateProgressUI(progress, status) {
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+
+        progressBar.style.width = progress + '%';
+        statusText.textContent = status;
+    }
+
+    // Manejar descarga completada
+    function handleDownloadComplete() {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+
+        const progressBar = document.getElementById('progressBar');
+        progressBar.classList.remove('progress-bar-custom');
+        progressBar.classList.add('bg-success');
+
+        // Verificar si descarga automática está habilitada
+        const autoDownload = document.getElementById('autoDownload').checked;
+        if (autoDownload && currentDownloadId) {
+            const downloadTiming = document.querySelector('input[name="downloadTiming"]:checked').value;
+            const playlistMode = document.getElementById('playlistMode').value;
+            const isPlaylistType = document.getElementById('type').value === 'playlist';
+
+            // Mensaje personalizado según el tipo de descarga
+            let completionMessage = '¡Descarga completada exitosamente!';
+            if (isPlaylistType) {
+                if (playlistMode === 'zip') {
+                    completionMessage = '¡Playlist comprimida en ZIP y lista para descarga automática!';
+                } else {
+                    completionMessage = '¡Todas las canciones listas para descarga automática individual!';
+                }
+            } else {
+                completionMessage = '¡Canción lista para descarga automática!';
+            }
+
+            showAlert(completionMessage, 'success');
+
+            if (downloadTiming === 'immediate') {
+                // Para descargas inmediatas, iniciar descarga automática
+                setTimeout(() => {
+                    initiateAutoDownload(currentDownloadId);
+                }, 1000);
+            } else {
+                // Para descargas al final, mostrar botón manual
+                showManualDownloadOption();
+            }
+        } else {
+            showAlert('¡Descarga completada! Los archivos aparecen en la lista de abajo.', 'success');
+        }
+
+        setTimeout(() => {
+            hideProgressArea();
+            resetForm();
+            // Actualizar la lista de archivos descargados
+            loadDownloadedFiles();
+        }, 5000);
+    }
+
+    // Función para iniciar descarga automática
+    async function initiateAutoDownload(downloadId) {
+        try {
+            const isPlaylistType = document.getElementById('type').value === 'playlist';
+            const playlistMode = document.getElementById('playlistMode').value;
+
+            // Mensaje personalizado según el tipo de descarga
+            let downloadMessage = 'Iniciando descarga automática...';
+            if (isPlaylistType) {
+                if (playlistMode === 'zip') {
+                    downloadMessage = 'Descargando automáticamente el archivo ZIP con todas las canciones...';
+                } else {
+                    downloadMessage = 'Verificando archivos para descarga individual...';
+                }
+            } else {
+                downloadMessage = 'Descargando automáticamente la canción...';
+            }
+
+            showAlert(downloadMessage, 'success');
+
+            // Para playlists con modo individual, verificar si hay múltiples archivos
+            if (isPlaylistType && playlistMode === 'individual') {
+                try {
+                    const filesResponse = await fetch(`/get_download_files/${downloadId}`);
+                    const filesData = await filesResponse.json();
+
+                    if (filesData.success && filesData.files && filesData.files.length > 1) {
+                        // Múltiples archivos - descargar individualmente
+                        showAlert(`${filesData.files.length} canciones listas. Descargando individualmente...`, 'success');
+
+                        for (let i = 0; i < filesData.files.length; i++) {
+                            setTimeout(() => {
+                                autoDownloadFile(filesData.files[i]);
+                                // Actualizar la lista después de la última descarga
+                                if (i === filesData.files.length - 1) {
+                                    setTimeout(() => {
+                                        loadDownloadedFiles();
+                                    }, 2000);
+                                }
+                            }, i * 1500); // 1.5 segundos de delay entre descargas
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    console.log('No se pudieron obtener archivos individuales, usando descarga estándar');
+                }
+            }
+
+            // Descarga estándar (archivo único o ZIP)
+            const autoDownloadUrl = `/auto_download/${downloadId}`;
+            const tempLink = document.createElement('a');
+            tempLink.href = autoDownloadUrl;
+            tempLink.style.display = 'none';
+
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+        } catch (error) {
+            console.error('Error en descarga automática:', error);
+            showAlert('Error en descarga automática. Los archivos están disponibles en la lista de abajo.', 'error');
+        }
+    }
+
+    // Función para mostrar opción de descarga manual
+    function showManualDownloadOption() {
+        const progressArea = document.getElementById('progressArea');
+        const cardBody = progressArea.querySelector('.card-body');
+        const isPlaylistType = document.getElementById('type').value === 'playlist';
+        const playlistMode = document.getElementById('playlistMode').value;
+
+        // Texto del botón según el tipo de descarga
+        let buttonText = 'Descargar Archivos';
+        let buttonIcon = 'fas fa-download';
+
+        if (isPlaylistType) {
+            if (playlistMode === 'zip') {
+                buttonText = 'Descargar ZIP Automáticamente';
+                buttonIcon = 'fas fa-file-archive';
+            } else {
+                buttonText = 'Descargar Canciones Individuales';
+                buttonIcon = 'fas fa-music';
+            }
+        } else {
+            buttonText = 'Descargar Canción';
+            buttonIcon = 'fas fa-download';
+        }
+
+        // Agregar botón de descarga manual
+        const downloadButton = document.createElement('div');
+        downloadButton.className = 'mt-3 text-center';
+        downloadButton.innerHTML = `
         <button class="btn btn-success btn-lg pulse-animation" onclick="initiateAutoDownload('${currentDownloadId}')">
             <i class="${buttonIcon} me-2"></i>${buttonText}
         </button>
@@ -700,205 +795,205 @@ function showManualDownloadOption() {
             </small>
         </div>
     `;
-    
-    cardBody.appendChild(downloadButton);
-}
 
-// Manejar error de descarga
-function handleDownloadError(errorMessage) {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-        progressInterval = null;
+        cardBody.appendChild(downloadButton);
     }
-    
-    const progressBar = document.getElementById('progressBar');
-    progressBar.classList.remove('progress-bar-custom');
-    progressBar.classList.add('bg-danger');
-    
-    showAlert('Error en la descarga: ' + errorMessage, 'error');
-    
-    setTimeout(() => {
-        hideProgressArea();
-        resetForm();
-    }, 5000);
-}
 
-// Funciones auxiliares
-function hideProgressArea() {
-    document.getElementById('progressArea').style.display = 'none';
-}
+    // Manejar error de descarga
+    function handleDownloadError(errorMessage) {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
 
-function resetDownloadButton(btn, originalText) {
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-}
+        const progressBar = document.getElementById('progressBar');
+        progressBar.classList.remove('progress-bar-custom');
+        progressBar.classList.add('bg-danger');
 
-function resetForm() {
-    const downloadBtn = document.getElementById('downloadBtn');
-    resetDownloadButton(downloadBtn, '<i class="fas fa-download me-2"></i>Iniciar Descarga');
-    
-    // Reset progress bar
-    const progressBar = document.getElementById('progressBar');
-    progressBar.style.width = '0%';
-    progressBar.className = 'progress-bar progress-bar-custom';
-    
-    // Clear URL
-    document.getElementById('url').value = '';
-    document.getElementById('statusText').textContent = 'Preparando descarga...';
-}
+        showAlert('Error en la descarga: ' + errorMessage, 'error');
 
-function showAlert(message, type) {
-    // Crear elemento de alerta
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}-custom alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = `
+        setTimeout(() => {
+            hideProgressArea();
+            resetForm();
+        }, 5000);
+    }
+
+    // Funciones auxiliares
+    function hideProgressArea() {
+        document.getElementById('progressArea').style.display = 'none';
+    }
+
+    function resetDownloadButton(btn, originalText) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+
+    function resetForm() {
+        const downloadBtn = document.getElementById('downloadBtn');
+        resetDownloadButton(downloadBtn, '<i class="fas fa-download me-2"></i>Iniciar Descarga');
+
+        // Reset progress bar
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = '0%';
+        progressBar.className = 'progress-bar progress-bar-custom';
+
+        // Clear URL
+        document.getElementById('url').value = '';
+        document.getElementById('statusText').textContent = 'Preparando descarga...';
+    }
+
+    function showAlert(message, type) {
+        // Crear elemento de alerta
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}-custom alert-dismissible fade show position-fixed`;
+        alertDiv.style.cssText = `
         top: 20px;
         right: 20px;
         z-index: 9999;
         min-width: 300px;
         max-width: 400px;
     `;
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-    
-    alertDiv.innerHTML = `
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+
+        alertDiv.innerHTML = `
         <div class="d-flex align-items-center">
             <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} me-2"></i>
             <span>${message}</span>
             <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto-remove después de 5 segundos
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
+
+        document.body.appendChild(alertDiv);
+
+        // Auto-remove después de 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Limpiar intervalos al salir de la página
+    window.addEventListener('beforeunload', () => {
+        if (progressInterval) {
+            clearInterval(progressInterval);
         }
-    }, 5000);
-}
+    });
 
-// Limpiar intervalos al salir de la página
-window.addEventListener('beforeunload', () => {
-    if (progressInterval) {
-        clearInterval(progressInterval);
-    }
-});
+    // Mejorar UX con Enter en el input URL
+    document.getElementById('url').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            document.getElementById('downloadForm').dispatchEvent(new Event('submit'));
+        }
+    });
 
-// Mejorar UX con Enter en el input URL
-document.getElementById('url').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('downloadForm').dispatchEvent(new Event('submit'));
-    }
-});
+    // Auto-detectar tipo de contenido y mostrar info de playlist
+    function updateDownloadType() {
+        const url = document.getElementById('url').value;
+        const typeSelect = document.getElementById('type');
 
-// Auto-detectar tipo de contenido y mostrar info de playlist
-function updateDownloadType() {
-    const url = document.getElementById('url').value;
-    const typeSelect = document.getElementById('type');
-    
-    if (url.includes('/sets/')) {
-        typeSelect.value = 'playlist';
+        if (url.includes('/sets/')) {
+            typeSelect.value = 'playlist';
+        }
+
+        togglePlaylistInfo();
     }
 
-    togglePlaylistInfo();
-}
+    document.getElementById('url').addEventListener('input', updateDownloadType);
+    document.getElementById('type').addEventListener('change', togglePlaylistInfo);
+    document.getElementById('playlistMode').addEventListener('change', updatePlaylistModeInfo);
+    document.getElementById('autoDownload').addEventListener('change', updateAutoDownloadInfo);
 
-document.getElementById('url').addEventListener('input', updateDownloadType);
-document.getElementById('type').addEventListener('change', togglePlaylistInfo);
-document.getElementById('playlistMode').addEventListener('change', updatePlaylistModeInfo);
-document.getElementById('autoDownload').addEventListener('change', updateAutoDownloadInfo);
-
-// Event listeners para las opciones de timing de descarga
-document.querySelectorAll('input[name="downloadTiming"]').forEach(radio => {
-    radio.addEventListener('change', updateAutoDownloadInfo);
-});
+    // Event listeners para las opciones de timing de descarga
+    document.querySelectorAll('input[name="downloadTiming"]').forEach(radio => {
+        radio.addEventListener('change', updateAutoDownloadInfo);
+    });
 
 
-// Función para mostrar/ocultar opciones de playlist
-function togglePlaylistInfo() {
-    const typeSelect = document.getElementById('type');
-    const playlistOptions = document.getElementById('playlistOptions');
-    
-    if (typeSelect.value === 'playlist') {
-        playlistOptions.style.display = 'block';
-        updatePlaylistModeInfo();
-    } else {
-        playlistOptions.style.display = 'none';
+    // Función para mostrar/ocultar opciones de playlist
+    function togglePlaylistInfo() {
+        const typeSelect = document.getElementById('type');
+        const playlistOptions = document.getElementById('playlistOptions');
+
+        if (typeSelect.value === 'playlist') {
+            playlistOptions.style.display = 'block';
+            updatePlaylistModeInfo();
+        } else {
+            playlistOptions.style.display = 'none';
+        }
+
+        updateAutoDownloadInfo();
     }
-    
-    updateAutoDownloadInfo();
-}
 
-// Función para actualizar información del modo de playlist
-function updatePlaylistModeInfo() {
-    const playlistMode = document.getElementById('playlistMode').value;
-    const playlistModeInfo = document.getElementById('playlistModeInfo');
-    
-    if (playlistMode === 'individual') {
-        playlistModeInfo.innerHTML = `
+    // Función para actualizar información del modo de playlist
+    function updatePlaylistModeInfo() {
+        const playlistMode = document.getElementById('playlistMode').value;
+        const playlistModeInfo = document.getElementById('playlistModeInfo');
+
+        if (playlistMode === 'individual') {
+            playlistModeInfo.innerHTML = `
             <i class="fas fa-info-circle me-1"></i>
             Cada canción se descargará automáticamente por separado - Ideal para escuchar individualmente
         `;
-    } else {
-        playlistModeInfo.innerHTML = `
+        } else {
+            playlistModeInfo.innerHTML = `
             <i class="fas fa-info-circle me-1"></i>
             Todas las canciones se comprimirán automáticamente en un solo archivo ZIP - Ideal para guardar
         `;
-    }
-}
-
-// Función para actualizar información de descarga automática
-function updateAutoDownloadInfo() {
-    const typeSelect = document.getElementById('type');
-    const autoDownloadInfo = document.getElementById('autoDownloadInfo');
-    const autoDownloadOptions = document.getElementById('autoDownloadOptions');
-    const autoDownload = document.getElementById('autoDownload');
-    
-    if (autoDownload.checked) {
-        autoDownloadOptions.style.display = 'block';
-        
-        if (typeSelect.value === 'playlist') {
-            autoDownloadInfo.textContent = 'Las canciones de la playlist se descargarán según la opción seleccionada';
-        } else {
-            autoDownloadInfo.textContent = 'La canción se descargará automáticamente a tu dispositivo';
         }
-    } else {
-        autoDownloadOptions.style.display = 'none';
-        autoDownloadInfo.textContent = 'Los archivos estarán disponibles en la página de Descargas';
     }
-}
 
-// Función para cargar archivos descargados
-async function loadDownloadedFiles() {
-    try {
-        const response = await fetch('/api/downloads');
-        const data = await response.json();
-        
-        const container = document.getElementById('downloadedFilesContainer');
-        
-        if (data.files && data.files.length > 0) {
-            container.innerHTML = generateFilesTable(data.files);
-            calculateStatistics(data.files);
+    // Función para actualizar información de descarga automática
+    function updateAutoDownloadInfo() {
+        const typeSelect = document.getElementById('type');
+        const autoDownloadInfo = document.getElementById('autoDownloadInfo');
+        const autoDownloadOptions = document.getElementById('autoDownloadOptions');
+        const autoDownload = document.getElementById('autoDownload');
+
+        if (autoDownload.checked) {
+            autoDownloadOptions.style.display = 'block';
+
+            if (typeSelect.value === 'playlist') {
+                autoDownloadInfo.textContent = 'Las canciones de la playlist se descargarán según la opción seleccionada';
+            } else {
+                autoDownloadInfo.textContent = 'La canción se descargará automáticamente a tu dispositivo';
+            }
         } else {
-            container.innerHTML = `
+            autoDownloadOptions.style.display = 'none';
+            autoDownloadInfo.textContent = 'Los archivos estarán disponibles en la página de Descargas';
+        }
+    }
+
+    // Función para cargar archivos descargados
+    async function loadDownloadedFiles() {
+        try {
+            const response = await fetch('/api/downloads');
+            const data = await response.json();
+
+            const container = document.getElementById('downloadedFilesContainer');
+
+            if (data.files && data.files.length > 0) {
+                container.innerHTML = generateFilesTable(data.files);
+                calculateStatistics(data.files);
+            } else {
+                container.innerHTML = `
                 <div class="empty-state text-center py-4">
                     <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
                     <h5 class="text-muted mb-2">No hay archivos descargados</h5>
                     <p class="text-muted">Las canciones y playlists que descargues aparecerán aquí</p>
                 </div>
             `;
+            }
+        } catch (error) {
+            console.error('Error loading downloads:', error);
         }
-    } catch (error) {
-        console.error('Error loading downloads:', error);
     }
-}
 
-// Función para generar la tabla de archivos
-function generateFilesTable(files) {
-    return `
-        <div class="table-responsive">
-            <table class="table table-custom table-hover mb-0">
+    // Función para generar la tabla de archivos
+    function generateFilesTable(files) {
+        return `
+        <div class="table-responsive" style="overflow: visible; height: auto; max-height: none;">
+            <table class="table table-custom table-hover mb-0" style="height: auto; max-height: none;">
                 <thead>
                     <tr>
                         <th><i class="fas fa-music me-2"></i>Archivo</th>
@@ -916,20 +1011,20 @@ function generateFilesTable(files) {
                                         ${getFileIcon(file.name)}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-truncate file-name-text" style="max-width: 250px;" title="${file.name}">
+                                        <div class="fw-semibold text-truncate file-name-text" style="max-width: 250px; color: #000000 !important; font-weight: 800 !important; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);" title="${file.name}">
                                             ${file.name}
                                         </div>
-                                        <div class="small text-muted d-md-none file-info-text">
+                                        <div class="small d-md-none file-info-text" style="color: rgba(0,0,0,0.8) !important;">
                                             ${file.size} • ${file.modified}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="d-none d-md-table-cell">
-                                <span class="badge file-size-badge px-3 py-2">${file.size}</span>
+                                <span class="badge px-3 py-2" style="background: rgba(255,255,255,0.8) !important; color: #000000 !important; border: 1px solid rgba(0,0,0,0.2) !important; font-weight: 600 !important;">${file.size}</span>
                             </td>
                             <td class="d-none d-sm-table-cell">
-                                <small class="file-date-text">${file.modified}</small>
+                                <small class="file-date-text" style="color: #000000 !important; font-weight: 500;">${file.modified}</small>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
@@ -996,111 +1091,111 @@ function generateFilesTable(files) {
             </div>
         </div>
     `;
-}
-
-// Función para obtener el icono del archivo
-function getFileIcon(filename) {
-    if (filename.endsWith('.zip')) {
-        return '<i class="fas fa-file-archive text-warning fa-lg"></i>';
-    } else if (filename.endsWith('.flac')) {
-        return '<i class="fas fa-file-audio text-success fa-lg"></i>';
-    } else if (filename.endsWith('.mp3')) {
-        return '<i class="fas fa-file-audio text-primary fa-lg"></i>';
-    } else {
-        return '<i class="fas fa-file-audio text-info fa-lg"></i>';
     }
-}
 
-// Función para calcular estadísticas
-function calculateStatistics(files) {
-    // Calcular tamaño total
-    const totalMB = files.reduce((sum, file) => {
-        const size = parseFloat(file.size.replace(' MB', ''));
-        return sum + size;
-    }, 0);
-    
-    let totalSizeText;
-    if (totalMB >= 1024) {
-        totalSizeText = (totalMB / 1024).toFixed(1) + ' GB';
-    } else {
-        totalSizeText = totalMB.toFixed(1) + ' MB';
-    }
-    
-    document.getElementById('totalSize').textContent = totalSizeText;
-    
-    // Contar archivos por extensión
-    let flacCount = 0;
-    let mp3Count = 0;
-    let zipCount = 0;
-    
-    files.forEach(file => {
-        if (file.name.toLowerCase().endsWith('.flac')) {
-            flacCount++;
-        } else if (file.name.toLowerCase().endsWith('.mp3')) {
-            mp3Count++;
-        } else if (file.name.toLowerCase().endsWith('.zip')) {
-            zipCount++;
+    // Función para obtener el icono del archivo
+    function getFileIcon(filename) {
+        if (filename.endsWith('.zip')) {
+            return '<i class="fas fa-file-archive text-warning fa-lg"></i>';
+        } else if (filename.endsWith('.flac')) {
+            return '<i class="fas fa-file-audio text-success fa-lg"></i>';
+        } else if (filename.endsWith('.mp3')) {
+            return '<i class="fas fa-file-audio text-primary fa-lg"></i>';
+        } else {
+            return '<i class="fas fa-file-audio text-info fa-lg"></i>';
         }
-    });
-    
-    document.getElementById('flacCount').textContent = flacCount;
-    document.getElementById('mp3Count').textContent = mp3Count;
-    document.getElementById('zipCount').textContent = zipCount;
-}
-
-// Función para refrescar descargas
-function refreshDownloads() {
-    loadDownloadedFiles();
-    showAlert('Lista de archivos actualizada', 'success');
-}
-
-// Función para copiar texto al portapapeles
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        showAlert('Nombre copiado al portapapeles', 'success');
-    }, function(err) {
-        showAlert('Error al copiar al portapapeles', 'error');
-    });
-}
-
-// Función para descarga automática de archivos individuales
-function autoDownloadFile(filename) {
-    try {
-        const downloadUrl = `/download_file/${encodeURIComponent(filename)}`;
-        
-        // Crear un enlace temporal para forzar la descarga
-        const tempLink = document.createElement('a');
-        tempLink.href = downloadUrl;
-        tempLink.style.display = 'none';
-        tempLink.download = filename;
-        
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-        
-        showAlert('Iniciando descarga automática...', 'success');
-    } catch (error) {
-        console.error('Error en descarga automática:', error);
-        showAlert('Error en descarga automática', 'error');
     }
-}
 
-// Initialize ads for this page
-document.addEventListener('DOMContentLoaded', function() {
-    // Cargar archivos descargados al inicio
-    loadDownloadedFiles();
-    
-    // Actualizar cada 30 segundos
-    refreshInterval = setInterval(loadDownloadedFiles, 30000);
-    
-    // Initialize rectangle ad
-    setTimeout(() => {
+    // Función para calcular estadísticas
+    function calculateStatistics(files) {
+        // Calcular tamaño total
+        const totalMB = files.reduce((sum, file) => {
+            const size = parseFloat(file.size.replace(' MB', ''));
+            return sum + size;
+        }, 0);
+
+        let totalSizeText;
+        if (totalMB >= 1024) {
+            totalSizeText = (totalMB / 1024).toFixed(1) + ' GB';
+        } else {
+            totalSizeText = totalMB.toFixed(1) + ' MB';
+        }
+
+        document.getElementById('totalSize').textContent = totalSizeText;
+
+        // Contar archivos por extensión
+        let flacCount = 0;
+        let mp3Count = 0;
+        let zipCount = 0;
+
+        files.forEach(file => {
+            if (file.name.toLowerCase().endsWith('.flac')) {
+                flacCount++;
+            } else if (file.name.toLowerCase().endsWith('.mp3')) {
+                mp3Count++;
+            } else if (file.name.toLowerCase().endsWith('.zip')) {
+                zipCount++;
+            }
+        });
+
+        document.getElementById('flacCount').textContent = flacCount;
+        document.getElementById('mp3Count').textContent = mp3Count;
+        document.getElementById('zipCount').textContent = zipCount;
+    }
+
+    // Función para refrescar descargas
+    function refreshDownloads() {
+        loadDownloadedFiles();
+        showAlert('Lista de archivos actualizada', 'success');
+    }
+
+    // Función para copiar texto al portapapeles
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            showAlert('Nombre copiado al portapapeles', 'success');
+        }, function (err) {
+            showAlert('Error al copiar al portapapeles', 'error');
+        });
+    }
+
+    // Función para descarga automática de archivos individuales
+    function autoDownloadFile(filename) {
         try {
-            (adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (e) {
-            console.log('Rectangle ad initialization failed:', e);
+            const downloadUrl = `/download_file/${encodeURIComponent(filename)}`;
+
+            // Crear un enlace temporal para forzar la descarga
+            const tempLink = document.createElement('a');
+            tempLink.href = downloadUrl;
+            tempLink.style.display = 'none';
+            tempLink.download = filename;
+
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+
+            showAlert('Iniciando descarga automática...', 'success');
+        } catch (error) {
+            console.error('Error en descarga automática:', error);
+            showAlert('Error en descarga automática', 'error');
         }
-    }, 1500);
-});
+    }
+
+    // Initialize ads for this page
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cargar archivos descargados al inicio
+        loadDownloadedFiles();
+
+        // Actualizar cada 30 segundos
+        refreshInterval = setInterval(loadDownloadedFiles, 30000);
+
+        // Initialize rectangle ad
+        setTimeout(() => {
+            try {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            } catch (e) {
+                console.log('Rectangle ad initialization failed:', e);
+            }
+        }, 1500);
+    });
 </script>
 {% endblock %}
