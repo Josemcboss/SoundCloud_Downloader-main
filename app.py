@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import zipfile
 import shutil
 import yt_dlp
@@ -18,6 +18,26 @@ app.secret_key = 'tu_clave_secreta_soundcloud_downloader_2024'
 download_status = {}
 download_progress = {}
 download_results = {} # Para almacenar la ruta de los archivos descargados
+download_timestamps = {} # Para rastrear cuándo se crearon las descargas
+
+def cleanup_old_downloads():
+    """Limpiar descargas antiguas (más de 10 minutos)"""
+    current_time = datetime.now()
+    to_remove = []
+    
+    for download_id, timestamp in download_timestamps.items():
+        if current_time - timestamp > timedelta(minutes=10):
+            to_remove.append(download_id)
+    
+    for download_id in to_remove:
+        if download_id in download_results:
+            del download_results[download_id]
+        if download_id in download_timestamps:
+            del download_timestamps[download_id]
+        if download_id in download_status:
+            del download_status[download_id]
+        if download_id in download_progress:
+            del download_progress[download_id]
 
 def zip_playlist_files(playlist_folder, zip_name):
     """Comprimir archivos de una carpeta en un ZIP y luego eliminar la carpeta."""
@@ -201,6 +221,10 @@ def download():
         })
 
     download_id = str(int(time.time() * 1000))
+    download_timestamps[download_id] = datetime.now()
+    
+    # Limpiar descargas antiguas
+    cleanup_old_downloads()
     
     thread = threading.Thread(
         target=descargar_contenido_async,
@@ -275,7 +299,16 @@ def auto_download(download_id):
         file_paths = download_results.get(download_id)
 
         if not file_paths:
-            return jsonify({'error': 'ID de descarga no válido o expirado'}), 404
+            # Crear un archivo de texto informativo en lugar de devolver JSON
+            info_content = "ID de descarga no válido o expirado.\nPor favor, intenta descargar nuevamente."
+            memory_file = io.BytesIO(info_content.encode('utf-8'))
+            
+            return send_file(
+                memory_file,
+                as_attachment=True,
+                download_name="error_descarga.txt",
+                mimetype='text/plain'
+            )
 
         # Si solo hay un archivo (canción única o playlist ya comprimida)
         if len(file_paths) == 1:
@@ -283,16 +316,25 @@ def auto_download(download_id):
             if os.path.exists(filepath):
                 return send_file(filepath, as_attachment=True, download_name=os.path.basename(filepath))
             else:
-                return jsonify({'error': 'Archivo no encontrado en el servidor'}), 404
+                # Crear un archivo de texto informativo en lugar de devolver JSON
+                info_content = "Archivo no encontrado en el servidor.\nPor favor, intenta descargar nuevamente."
+                memory_file = io.BytesIO(info_content.encode('utf-8'))
+                
+                return send_file(
+                    memory_file,
+                    as_attachment=True,
+                    download_name="archivo_no_encontrado.txt",
+                    mimetype='text/plain'
+                )
 
-        # Si hay múltiples archivos, crear un ZIP temporal con nombre descriptivo
+        # Si hay múltiples archivos, crear un ZIP temporal automáticamente
         elif len(file_paths) > 1:
             memory_file = io.BytesIO()
             
             # Generar nombre más descriptivo para el ZIP
             first_file = os.path.basename(file_paths[0])
             playlist_name = first_file.split('.')[0] if first_file else 'playlist'
-            zip_name = f"{playlist_name}_y_{len(file_paths)-1}_mas.zip"
+            zip_name = f"{playlist_name}_playlist_{len(file_paths)}_canciones.zip"
 
             with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for fpath in file_paths:
@@ -311,12 +353,30 @@ def auto_download(download_id):
             )
 
         else: # Si la lista está vacía
-            return jsonify({'error': 'No se encontraron archivos para esta descarga'}), 404
+            # Crear un archivo de texto informativo en lugar de devolver JSON
+            info_content = "No se encontraron archivos para esta descarga.\nPor favor, intenta descargar nuevamente."
+            memory_file = io.BytesIO(info_content.encode('utf-8'))
+            
+            return send_file(
+                memory_file,
+                as_attachment=True,
+                download_name="info_descarga.txt",
+                mimetype='text/plain'
+            )
 
     except Exception as e:
-        return jsonify({'error': f'Error en descarga automática: {str(e)}'}), 500
+        # Crear un archivo de texto informativo en lugar de devolver JSON
+        info_content = f"Error en descarga automática: {str(e)}\nPor favor, intenta descargar nuevamente."
+        memory_file = io.BytesIO(info_content.encode('utf-8'))
+        
+        return send_file(
+            memory_file,
+            as_attachment=True,
+            download_name="error_descarga.txt",
+            mimetype='text/plain'
+        )
     finally:
-        # Limpiar el resultado para que no se pueda volver a descargar
+        # Limpiar el resultado después de la descarga
         if download_id in download_results:
             del download_results[download_id]
 
@@ -338,6 +398,26 @@ def download_individual_file(download_id, file_index):
             
     except Exception as e:
         return jsonify({'error': f'Error al descargar archivo individual: {str(e)}'}), 500
+
+@app.route('/get_download_files/<download_id>')
+def get_download_files(download_id):
+    """Obtener la lista de archivos de una descarga para procesamiento individual."""
+    try:
+        file_paths = download_results.get(download_id)
+        
+        if not file_paths:
+            return jsonify({'error': 'ID de descarga no válido o expirado'}), 404
+            
+        valid_files = [os.path.basename(fpath) for fpath in file_paths if os.path.exists(fpath)]
+        
+        return jsonify({
+            'success': True,
+            'files': valid_files,
+            'count': len(valid_files)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Error al obtener archivos: {str(e)}'}), 500
 
 
 if __name__ == '__main__':

@@ -269,6 +269,125 @@
     color: var(--text-primary);
 }
 
+/* Estilos específicos para la tabla de archivos descargados */
+#downloadsSection .table-custom {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+[data-theme="dark"] #downloadsSection .table-custom {
+    background: rgba(248, 250, 252, 0.05);
+}
+
+#downloadsSection .table-custom th {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white !important;
+    font-weight: 600;
+    padding: 16px;
+}
+
+[data-theme="dark"] #downloadsSection .table-custom th {
+    background: rgba(248, 250, 252, 0.1);
+    color: var(--text-primary) !important;
+}
+
+#downloadsSection .table-custom td {
+    border: none;
+    padding: 16px;
+    vertical-align: middle;
+}
+
+/* Nombres de archivos - texto más visible */
+#downloadsSection .fw-semibold {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] #downloadsSection .fw-semibold {
+    color: var(--text-primary) !important;
+}
+
+/* Información secundaria */
+#downloadsSection .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-theme="dark"] #downloadsSection .text-muted {
+    color: rgba(248, 250, 252, 0.7) !important;
+}
+
+/* Badges de tamaño */
+.file-size-badge {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] .file-size-badge {
+    background: rgba(248, 250, 252, 0.2) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(248, 250, 252, 0.3) !important;
+}
+
+/* Filas de la tabla */
+#downloadsSection .table-custom tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background 0.3s ease;
+}
+
+[data-theme="dark"] #downloadsSection .table-custom tbody tr {
+    border-bottom: 1px solid rgba(248, 250, 252, 0.1);
+}
+
+#downloadsSection .table-custom tbody tr:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] #downloadsSection .table-custom tbody tr:hover {
+    background: rgba(248, 250, 252, 0.08);
+}
+
+/* Clases específicas para nombres de archivos */
+.file-name-text {
+    color: white !important;
+    font-weight: 700 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .file-name-text {
+    color: #f8fafc !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.file-info-text {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-theme="dark"] .file-info-text {
+    color: rgba(248, 250, 252, 0.8) !important;
+}
+
+.file-date-text {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500 !important;
+}
+
+[data-theme="dark"] .file-date-text {
+    color: rgba(248, 250, 252, 0.9) !important;
+}
+
+/* Mejorar contraste general en la sección de descargas */
+#downloadsSection .small {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="dark"] #downloadsSection .small {
+    color: rgba(248, 250, 252, 0.9) !important;
+}
+
 /* Animación de entrada para archivos */
 .file-entry {
     animation: slideInUp 0.3s ease-out;
@@ -480,21 +599,10 @@ function handleDownloadComplete() {
 }
 
 // Función para iniciar descarga automática
-function initiateAutoDownload(downloadId) {
+async function initiateAutoDownload(downloadId) {
     try {
-        const autoDownloadUrl = `/auto_download/${downloadId}`;
         const isPlaylistType = document.getElementById('type').value === 'playlist';
         const playlistMode = document.getElementById('playlistMode').value;
-        
-        // Crear un enlace temporal para forzar la descarga
-        const tempLink = document.createElement('a');
-        tempLink.href = autoDownloadUrl;
-        tempLink.style.display = 'none';
-        tempLink.target = '_blank';
-        
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
         
         // Mensaje personalizado según el tipo de descarga
         let downloadMessage = 'Iniciando descarga automática...';
@@ -502,16 +610,55 @@ function initiateAutoDownload(downloadId) {
             if (playlistMode === 'zip') {
                 downloadMessage = 'Descargando automáticamente el archivo ZIP con todas las canciones...';
             } else {
-                downloadMessage = 'Descargando automáticamente todas las canciones por separado...';
+                downloadMessage = 'Verificando archivos para descarga individual...';
             }
         } else {
             downloadMessage = 'Descargando automáticamente la canción...';
         }
         
         showAlert(downloadMessage, 'success');
+        
+        // Para playlists con modo individual, verificar si hay múltiples archivos
+        if (isPlaylistType && playlistMode === 'individual') {
+            try {
+                const filesResponse = await fetch(`/get_download_files/${downloadId}`);
+                const filesData = await filesResponse.json();
+                
+                if (filesData.success && filesData.files && filesData.files.length > 1) {
+                    // Múltiples archivos - descargar individualmente
+                    showAlert(`${filesData.files.length} canciones listas. Descargando individualmente...`, 'success');
+                    
+                    for (let i = 0; i < filesData.files.length; i++) {
+                        setTimeout(() => {
+                            autoDownloadFile(filesData.files[i]);
+                            // Actualizar la lista después de la última descarga
+                            if (i === filesData.files.length - 1) {
+                                setTimeout(() => {
+                                    loadDownloadedFiles();
+                                }, 2000);
+                            }
+                        }, i * 1500); // 1.5 segundos de delay entre descargas
+                    }
+                    return;
+                }
+            } catch (error) {
+                console.log('No se pudieron obtener archivos individuales, usando descarga estándar');
+            }
+        }
+        
+        // Descarga estándar (archivo único o ZIP)
+        const autoDownloadUrl = `/auto_download/${downloadId}`;
+        const tempLink = document.createElement('a');
+        tempLink.href = autoDownloadUrl;
+        tempLink.style.display = 'none';
+        
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        
     } catch (error) {
         console.error('Error en descarga automática:', error);
-        showAlert('Error en descarga automática. Ve a la página de Descargas para obtener tus archivos.', 'error');
+        showAlert('Error en descarga automática. Los archivos están disponibles en la lista de abajo.', 'error');
     }
 }
 
@@ -769,20 +916,20 @@ function generateFilesTable(files) {
                                         ${getFileIcon(file.name)}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-truncate" style="max-width: 250px;" title="${file.name}">
+                                        <div class="fw-semibold text-truncate file-name-text" style="max-width: 250px;" title="${file.name}">
                                             ${file.name}
                                         </div>
-                                        <div class="small text-muted d-md-none">
+                                        <div class="small text-muted d-md-none file-info-text">
                                             ${file.size} • ${file.modified}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="d-none d-md-table-cell">
-                                <span class="badge bg-light text-dark px-3 py-2">${file.size}</span>
+                                <span class="badge file-size-badge px-3 py-2">${file.size}</span>
                             </td>
                             <td class="d-none d-sm-table-cell">
-                                <small class="text-muted">${file.modified}</small>
+                                <small class="file-date-text">${file.modified}</small>
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">
