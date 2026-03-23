@@ -162,11 +162,10 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
 
             # Para descargas individuales (por defecto), mantener archivos separados
             if zip_option != 'zip':
-                # Crear subcarpeta para la playlist pero mantener archivos individuales
-                playlist_folder = os.path.join('descargas', safe_playlist_title)
-                ydl_opts['outtmpl'] = {
-                    'default': os.path.join(playlist_folder, '%(title)s.%(ext)s')
-                }
+            # Guardar directamente en la carpeta descargas para que el frontend las encuentre
+            ydl_opts['outtmpl'] = {
+                'default': os.path.join('descargas', '%(title)s.%(ext)s')
+            }
             else:
                 # Solo para ZIP, usar carpeta temporal
                 playlist_folder = os.path.join('descargas', safe_playlist_title)
