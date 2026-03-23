@@ -160,19 +160,18 @@ def descargar_contenido_async(url, tipo, download_id, zip_option=None):
                 "progress": 0
             }
 
-            # Para descargas individuales (por defecto), mantener archivos separados
+# Para descargas individuales (por defecto), mantener archivos separados
             if zip_option != 'zip':
-            # Guardar directamente en la carpeta descargas para que el frontend las encuentre
-            ydl_opts['outtmpl'] = {
-                'default': os.path.join('descargas', '%(title)s.%(ext)s')
-            }
+                # Guardar directamente en la carpeta descargas para que el frontend las encuentre
+                ydl_opts['outtmpl'] = {
+                    'default': os.path.join('descargas', '%(title)s.%(ext)s')
+                }
             else:
                 # Solo para ZIP, usar carpeta temporal
                 playlist_folder = os.path.join('descargas', safe_playlist_title)
                 ydl_opts['outtmpl'] = {
                     'default': os.path.join(playlist_folder, '%(title)s.%(ext)s')
                 }
-
         # Iniciar descarga
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
